@@ -1,6 +1,8 @@
 <resources>
   <string name="app_name" translatable="false">wa-reco</string>
   <string name="call_detection">WhatsApp call detection</string>
+  <string name="accessibility_mic_label">wa-reco experimental microphone sharing</string>
+  <string name="accessibility_mic_description">Optional microphone sharing during calls. This service does not read screens, messages or accessibility events and does not press buttons. Enabling it does not start recording. Remote speech and headset support vary by phone; activate recording separately in wa-reco.</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
 </resources>

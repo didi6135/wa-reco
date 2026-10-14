@@ -37,8 +37,10 @@ async function readSnapshot(): Promise<SetupSnapshot> {
     NativeRecorder.getSystemAccessStatus(),
     NativeRecorder.getAutoRecordingStatus(),
     NativeRecorder.getStatus(),
+    NativeRecorder.getAccessibilityMicStatus(),
   ]);
-  const [microphone, notifications, system, automatic, recorder] = results;
+  const [microphone, notifications, system, automatic, recorder, accessibility] = results;
+  const experimental = automatic.status === 'fulfilled' && automatic.value.mode === 'accessibilityMic';
   return {
     evidence: {
       nativeAvailable: android && recorder.status === 'fulfilled',
@@ -46,9 +48,12 @@ async function readSnapshot(): Promise<SetupSnapshot> {
       notificationsGranted: notifications.status === 'fulfilled' ? notifications.value : null,
       system: system.status === 'fulfilled' ? system.value : null,
       automatic: automatic.status === 'fulfilled' ? automatic.value : null,
+      accessibility: accessibility.status === 'fulfilled' ? accessibility.value : null,
     },
     nativeAvailable: android && recorder.status === 'fulfilled',
-    error: results.some(result => result.status === 'rejected') ? CHECK_ERROR() : null,
+    // The unused capture route is not an onboarding prerequisite.
+    error: results.some((result, index) => result.status === 'rejected' &&
+      (experimental ? index !== 2 : index !== 5)) ? CHECK_ERROR() : null,
   };
 }
 

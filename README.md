@@ -6,23 +6,39 @@ Hebrew/English Android recorder with three main screens: record, recordings and 
 
 Follow the setup walkthrough on the phone. Microphone permission, notification access and user-approved wireless debugging activation have distinct purposes. Developer options and wireless pairing require the phone owner's actions; ordinary microphone permission does not grant call-audio access. Initial activation needs Wi-Fi; an already activated helper can continue without Wi-Fi, subject to the phone's process lifecycle. Reboot or process termination may require activation again.
 
+Optional **experimental activation without an external Wi-Fi network** adds a guided preparation step and an explicit recovery button after reboot. It requires a previously authorized secure-settings grant and Nearby devices permission, temporarily uses a local-only hotspot, and verifies the detached helper after restoring settings and releasing that hotspot. It is off by default, depends on firmware and does not automatically arm recording after boot. See [setup and limitations](docs/offline-recovery-setup.md).
+
+If paired automatic recording was enabled before a restart, version 1.5.12 posts a **Resume automatic recording** reminder after the phone is unlocked, subject to Android notification settings. Tap it to open the visible setup screen and restore the previously enabled mode using existing grants and prepared activation. Keep the app open until readiness is verified. Missing permissions, an active call or unavailable activation require a manual repair; there is no background retry. The reminder alone never starts a helper or microphone service. With local recovery prepared, the Wi-Fi radio needs to be on during activation but no external Wi-Fi network or computer is required. Physical reboot/reminder behavior on each phone remains a device test.
+
 Google Drive backup is optional. In Settings, connect **your own Google account** to create or reuse this installation's `wa-reco` folder, or choose an existing writable folder with Google's picker. Check the displayed account and folder, then explicitly enable backup of existing and future completed recordings. Uploads go directly from your phone to the selected Drive destination. Disconnecting preserves local recordings and uploaded files. The app publisher's OAuth registration identifies the app; it is not the destination account. See [Drive setup](docs/google-drive-setup.md).
 
 Telegram backup is a separate opt-in. Create a dedicated private bot through BotFather, enter its token in the app, open the connection link and confirm the private chat. Enable backup only after that connection is confirmed. Long recordings are sent as playable lossless WAV parts; the original remains on your phone. A missing receipt is shown as an unknown outcome and requires your confirmation before a potentially duplicate retry. See [Telegram setup](docs/telegram-backup.md). The maintainer's delivery bot is never built into the application.
 
 Read [privacy and data handling](docs/privacy.md) for permissions, local storage, cloud recipients and deletion controls.
 
+Call setup uses the **paired wireless-debugging connection**. The accessibility microphone experiment is no longer offered: it did not provide a separate remote-call audio channel. Installations that selected it are guided through an explicit return to the paired connection, preserving recordings and pairing and requiring separate automatic-mode activation. See [current guided setup](docs/clean-setup.md) and the [historical experiment](docs/no-pairing-experiment.md).
+
 ## Compatibility and verification
 
 See the [measured Android 13–16 matrix](docs/android-device-compatibility.md) and
 [reproducible probes](tools/android-device-matrix/README.md). Synthetic framework
 capture passed on Android14/15/16 emulators; stock OEM WhatsApp calls are a
-separate pending test. Main contains an unreleased setup-diagnostics fix; the
-frozen1.5.4 APK does not include that correction.
+separate test. The owner accepted1.5.6 and reported recovery after reboot without
+USB or an external Wi-Fi network; the agent's separate Samsung/API36 measurement
+kept USB debugging enabled. Versions1.5.7 through1.5.9 offered a no-pairing
+microphone experiment. Version1.5.10 restores the paired setup after a missing
+remote-voice report on another phone; it does not establish that phone's support.
+Version1.5.11 restores offline preparation in clean Settings, uses already-prepared
+local recovery for explicit activation and shows automatic recording status on Home.
+A live helper needs no permanent Wi-Fi connection. After reboot, open the app and
+activate before the call; local recovery needs the Wi-Fi radio on but no external network.
+Version1.5.12 adds a reboot reminder and guarded one-tap foreground restoration of
+previously enabled paired Auto. Native/frontend tests and release checks do not
+establish physical reboot notification delivery or two-party audio on another phone.
 
 - Installation: Android 7/API 24 or newer, ARM64. Installation does not imply two-sided call recording support.
 - Call-recording helper: Android 14/15 experimental candidates; Android 16 behavior has been exercised on a Samsung S26 Ultra. Other phones, OEM policies, headphones/Bluetooth and call cases require device tests.
-- Android 13 and older: ordinary microphone recording is separate; the current two-sided call helper rejects these versions.
+- Android 13 and older: the current two-sided call helper rejects these versions. Ordinary microphone recording is separate; the former accessibility experiment is not a supported call-recording alternative.
 - Native Drive authorization requires Google Play services and a registered Android OAuth client. The hosted connection has reached a selected account/folder on the tested Samsung; actual upload and the new default-folder route still require device/provider verification. Google services are external dependencies; an open-source app does not make these SDKs or services open source.
 - This repository does not provide an iPhone implementation that records both parties of another app's WhatsApp call.
 

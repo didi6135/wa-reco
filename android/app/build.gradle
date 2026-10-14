@@ -164,10 +164,10 @@ android {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
         }
     }
-    // Keep Ninja object paths within Windows' limit without changing the source tree.
+    // Keep generated native staging inside this checkout; CMake still bounds object paths.
     if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
         externalNativeBuild {
-            cmake { buildStagingDirectory file("${System.getenv('SystemDrive')}/wa-cxx") }
+            cmake { buildStagingDirectory rootProject.file('../artifacts/cxx/app') }
         }
     }
     androidResources {
@@ -178,8 +178,8 @@ android {
 androidComponents {
     onVariants(selector().withBuildType('release')) { variant ->
         variant.outputs.each { output ->
-            output.versionCode.set(15)
-            output.versionName.set('1.5.4')
+            output.versionCode.set(23)
+            output.versionName.set('1.5.12')
         }
     }
 }

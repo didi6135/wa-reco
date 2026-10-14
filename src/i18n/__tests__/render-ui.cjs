@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 module.exports = function createUiHarness(core) {
   const root = path.resolve(__dirname, '../..'); const cache = new Map(); let recording, setup, route;
-  const react = { createElement: (type, props, ...children) => ({ type, props: props || {}, children }), useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}], useMemo: fn => fn(), useRef: current => ({ current }), useCallback: fn => fn };
+  const react = { createElement: (type, props, ...children) => ({ type, props: props || {}, children }), useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}], useMemo: fn => fn(), useRef: current => ({ current }), useCallback: fn => fn, useEffect() {} };
   const native = { ...Object.fromEntries(['View', 'Text', 'ScrollView', 'FlatList', 'TouchableOpacity', 'TextInput', 'Switch', 'ActivityIndicator'].map(name => [name, name])), StyleSheet: { create: value => value, hairlineWidth: 1 }, Platform: { OS: 'android', Version: 36 }, AppState: { currentState: 'active' }, Alert: { alert: () => { throw Error('Rendering must not open a dialog'); } }, Linking: {}, PermissionsAndroid: {} };
   const localization = { ...core, useLocalizedStyles: styles => core.directionalStyles(styles, core.getLanguage()), useLocalization: () => ({ language: core.getLanguage(), isRTL: core.getLanguage() === 'he', ready: true, error: null, selectLanguage: async () => {} }) };
   function load(file) {
@@ -43,7 +43,13 @@ module.exports = function createUiHarness(core) {
     return node.children.map(text).join(node.type === 'Text' ? '' : ' ');
   }
   return {
-    render(screen, nextRecording, nextSetup) { recording = nextRecording; setup = nextSetup; route = { recordingId: nextRecording.recordings[0]?.id }; return text(load(path.join(root, `screens/${screen}.tsx`)).default()); },
+    render(screen, nextRecording, nextSetup) {
+      recording = { accessibilityMicStatus: null, ...nextRecording };
+      setup = { ...nextSetup, readiness: { mode: 'system', captureReady: nextSetup.readiness.helper,
+        automaticSupported: true, ...nextSetup.readiness } };
+      route = { recordingId: nextRecording.recordings[0]?.id };
+      return text(load(path.join(root, `screens/${screen}.tsx`)).default());
+    },
     recordButton(isRecording) { return text(load(path.join(root, 'components/RecordButton.tsx')).default({ isRecording, onPress() {} })); },
   };
 };

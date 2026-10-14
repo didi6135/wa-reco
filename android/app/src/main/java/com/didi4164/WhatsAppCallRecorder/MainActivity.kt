@@ -2,6 +2,7 @@ package com.didi4164.WhatsAppCallRecorder
 
 import android.os.Build
 import android.os.Bundle
+import android.content.Intent
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -17,6 +18,28 @@ class MainActivity : ReactActivity() {
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
     super.onCreate(null)
+    RestartReminderController.receive(this, intent)
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    RestartReminderController.receive(this, intent)
+  }
+
+  override fun onPause() {
+    RestartReminderController.onActivityLeft(this)
+    super.onPause()
+  }
+
+  override fun onDestroy() {
+    RestartReminderController.onActivityLeft(this)
+    super.onDestroy()
+  }
+
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    if (!hasFocus) RestartReminderController.onActivityFocusLost(this)
+    super.onWindowFocusChanged(hasFocus)
   }
 
   /**

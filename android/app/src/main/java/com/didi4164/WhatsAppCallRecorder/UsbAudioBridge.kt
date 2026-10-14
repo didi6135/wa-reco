@@ -212,6 +212,17 @@ object UsbAudioBridge {
     }, "UsbAudioListener").start()
   }
   fun isConnected(): Boolean = current?.connected == true
+  /** Native transaction ownership only; never expose the socket or token to JS. */
+  internal fun currentConnectionForOwnership(): Connection? = synchronized(lock) {
+    current?.takeIf { it.connected }
+  }
+  /** An old recovery may close its own helper, never a replacement accepted later. */
+  internal fun disconnectIfCurrent(expected: Connection) {
+    val owned = synchronized(lock) {
+      if (current === expected) { current = null; expected } else null
+    }
+    owned?.disconnect()
+  }
   /** Authenticated socket lifetime, independent of a heartbeat delayed by CPU suspension. */
   fun isTransportOpen(): Boolean = current?.transportOpen == true
   fun lastActivityMs(): Long = current?.let { if (it.connected) it.authenticatedActivityMs else 0L } ?: 0L

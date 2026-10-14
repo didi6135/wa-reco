@@ -9,14 +9,151 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.common.LifecycleState
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 
-class CallRecorderModule(private val context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
+class CallRecorderModule(private val context: ReactApplicationContext) : ReactContextBaseJavaModule(context), LifecycleEventListener {
   private val io = Executors.newSingleThreadExecutor()
+  private val offlineEntryHandler = android.os.Handler(android.os.Looper.getMainLooper())
+  private val offlineEntryGeneration = AtomicLong()
+  @Volatile private var offlineEntryGate: OfflineRecoveryEntryGate? = null
+  @Volatile private var offlineEntryInvalidated = false
+  init { context.addLifecycleEventListener(this) }
+  override fun onHostResume() = Unit
+  private fun cancelOfflineEntry() {
+    offlineEntryGeneration.incrementAndGet()
+    val waiting = offlineEntryGate
+    offlineEntryGate = null
+    offlineEntryHandler.post { waiting?.cancel() }
+  }
+  override fun onHostPause() { cancelOfflineEntry(); NativeWirelessAudioBridge.cancelOfflineRecovery() }
+  override fun onHostDestroy() { cancelOfflineEntry(); NativeWirelessAudioBridge.cancelOfflineRecovery() }
+  override fun invalidate() {
+    offlineEntryInvalidated = true
+    cancelOfflineEntry()
+    NativeWirelessAudioBridge.cancelOfflineRecovery()
+    context.removeLifecycleEventListener(this)
+    super.invalidate()
+  }
+  private fun offlineForegroundAction(promise: Promise, foregroundFailureCode: String = "OFFLINE_FOREGROUND_REQUIRED", action: (foreground: () -> Boolean) -> Unit) {
+    val activity = currentActivity
+    // Capture the lifecycle token before posting to main: pause/resume must not resurrect this request.
+    val generation = offlineEntryGeneration.incrementAndGet()
+    if (activity == null || offlineEntryInvalidated || context.lifecycleState != LifecycleState.RESUMED) {
+      promise.reject(foregroundFailureCode, foregroundFailureCode); return
+    }
+    activity.runOnUiThread {
+      if (offlineEntryGeneration.get() != generation || offlineEntryInvalidated || context.lifecycleState != LifecycleState.RESUMED) {
+        promise.reject(foregroundFailureCode, foregroundFailureCode); return@runOnUiThread
+      }
+      val foreground = {
+        OfflineRecoveryEntryGate.permitsAction(OfflineRecoveryEntryGate.State(
+          !offlineEntryInvalidated && currentActivity === activity && !activity.isFinishing && !activity.isDestroyed,
+          context.lifecycleState == LifecycleState.RESUMED,
+          activity.hasWindowFocus(),
+          offlineEntryGeneration.get() == generation,
+        ))
+      }
+      offlineEntryGate?.cancel()
+      lateinit var gate: OfflineRecoveryEntryGate
+      gate = OfflineRecoveryEntryGate(object : OfflineRecoveryEntryGate.Scheduler {
+        override fun now(): Long = android.os.SystemClock.elapsedRealtime()
+        override fun post(task: Runnable, delayMs: Long) { offlineEntryHandler.postDelayed(task, delayMs) }
+      }, {
+        OfflineRecoveryEntryGate.State(
+          !offlineEntryInvalidated && currentActivity === activity && !activity.isFinishing && !activity.isDestroyed,
+          context.lifecycleState == LifecycleState.RESUMED,
+          activity.hasWindowFocus(),
+          offlineEntryGeneration.get() == generation && offlineEntryGate === gate,
+        )
+      }, {
+        if (offlineEntryGate === gate) offlineEntryGate = null
+        // The bridge still rechecks this same foreground predicate before privileged work.
+        if (foreground()) action(foreground)
+        else promise.reject(foregroundFailureCode, foregroundFailureCode)
+      }, { code ->
+        if (offlineEntryGate === gate) offlineEntryGate = null
+        val mapped = if (code == "OFFLINE_FOREGROUND_REQUIRED") foregroundFailureCode else code
+        promise.reject(mapped, mapped)
+      })
+      offlineEntryGate = gate
+      gate.start()
+    }
+  }
   override fun getName(): String = "CallRecorder"
   @ReactMethod fun getStatus(promise: Promise) { promise.resolve(RecordingService.status(context)) }
   @ReactMethod fun getAutoRecordingStatus(promise: Promise) { promise.resolve(AutoRecordingController.statusMap(context)) }
+  @ReactMethod fun consumeRestartResumeRequest(promise: Promise) {
+    val activity = currentActivity
+    if (activity == null) { promise.resolve(false); return }
+    activity.runOnUiThread {
+      promise.resolve(RestartReminderController.consume(activity,
+        !offlineEntryInvalidated && currentActivity === activity && context.lifecycleState == LifecycleState.RESUMED))
+    }
+  }
+  @ReactMethod fun resumeAutoRecordingAfterRestart(promise: Promise) {
+    offlineForegroundAction(promise, "FOREGROUND_REQUIRED") { foreground ->
+      val activity = currentActivity
+      if (activity == null) { promise.reject("RESTART_RESUME_UNAVAILABLE", "RESTART_RESUME_UNAVAILABLE"); return@offlineForegroundAction }
+      val authorization = RestartReminderController.beginArming(activity, foreground())
+      if (authorization < 0) { promise.reject("RESTART_RESUME_UNAVAILABLE", "RESTART_RESUME_UNAVAILABLE"); return@offlineForegroundAction }
+      val allowed = {
+        RestartReminderController.permitsArming(activity, authorization, foreground()) &&
+          !RecordingService.isBusy() && !NativeWirelessAudioBridge.isOfflineRecoveryRunning() &&
+          !RecorderReadinessService.isStopping() && !AutoRecordingController.hasObservedCall() &&
+          runCatching { (context.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager).mode == 0 }.getOrDefault(false)
+      }
+      if (RecordingService.isArming() || !allowed()) {
+        RestartReminderController.cancelResume(context)
+        promise.reject("RESTART_RESUME_REVOKED", "RESTART_RESUME_REVOKED"); return@offlineForegroundAction
+      }
+      AutoRecordingController.setEnabled(context, true, promise, allowed)
+    }
+  }
+  @ReactMethod fun getAccessibilityMicStatus(promise: Promise) { promise.resolve(AccessibilityMicController.status(context)) }
+  @ReactMethod fun setRecordingMode(mode: String, promise: Promise) {
+    offlineForegroundAction(promise, "FOREGROUND_REQUIRED") { foreground ->
+      val audioMode = runCatching { (context.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager).mode }.getOrDefault(2)
+      val code = AccessibilityMicCapturePolicy.modeMutationRejection(mode, Build.VERSION.SDK_INT, foreground(),
+        RecordingService.isBusy(), RecordingService.isArming(), NativeWirelessAudioBridge.statusMap(context).getBoolean("connecting"),
+        if (AutoRecordingController.hasObservedCall()) 2 else audioMode)
+      if (code != null) { promise.reject(code, code); return@offlineForegroundAction }
+      if (AccessibilityMicController.mode(context) != mode) {
+        AutoRecordingController.disableForModeChange(context)
+        if (!AccessibilityMicController.saveMode(context, mode)) { promise.reject("RECORDING_MODE_SAVE_FAILED", "RECORDING_MODE_SAVE_FAILED"); return@offlineForegroundAction }
+      }
+      promise.resolve(AccessibilityMicController.status(context))
+    }
+  }
+  @ReactMethod fun openAccessibilityMicSetup(promise: Promise) {
+    offlineForegroundAction(promise, "FOREGROUND_REQUIRED") { foreground ->
+      if (!foreground()) { promise.reject("FOREGROUND_REQUIRED", "FOREGROUND_REQUIRED"); return@offlineForegroundAction }
+      try {
+        currentActivity!!.startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        promise.resolve(null)
+      } catch (_: Exception) { promise.reject("ACCESSIBILITY_SETUP_FAILED", "ACCESSIBILITY_SETUP_FAILED") }
+    }
+  }
+  @ReactMethod fun openAccessibilityMicAppInfo(promise: Promise) {
+    offlineForegroundAction(promise, "FOREGROUND_REQUIRED") { foreground ->
+      val audioMode = runCatching { (context.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager).mode }.getOrDefault(-1)
+      val code = AccessibilityMicCapturePolicy.appInfoRecoveryRejection(Build.VERSION.SDK_INT,
+        AccessibilityMicController.mode(context) == AccessibilityMicController.MODE, foreground(),
+        RecordingService.isBusy(), RecordingService.isArming(),
+        NativeWirelessAudioBridge.isOfflineRecoveryRunning() || NativeWirelessAudioBridge.statusMap(context).getBoolean("connecting"),
+        audioMode, AutoRecordingController.hasObservedCall())
+      if (code != null) { promise.reject(code, code); return@offlineForegroundAction }
+      if (!foreground()) { promise.reject("FOREGROUND_REQUIRED", "FOREGROUND_REQUIRED"); return@offlineForegroundAction }
+      try {
+        // Public own-app details only. Android and the user retain all restriction/permission decisions.
+        currentActivity!!.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+          android.net.Uri.fromParts("package", context.packageName, null)))
+        promise.resolve(null)
+      } catch (_: Exception) { promise.reject("ACCESSIBILITY_APP_INFO_FAILED", "ACCESSIBILITY_APP_INFO_FAILED") }
+    }
+  }
   @ReactMethod fun getCallNameStatus(promise: Promise) {
     promise.resolve(Arguments.createMap().apply { putBoolean("enabled", CallNamePreferences.isEnabled(context)) })
   }
@@ -43,6 +180,13 @@ class CallRecorderModule(private val context: ReactApplicationContext) : ReactCo
   @ReactMethod fun setAutoRecordingEnabled(enabled: Boolean, promise: Promise) {
     if (!enabled) {
       android.os.Handler(android.os.Looper.getMainLooper()).post { AutoRecordingController.setEnabled(context, false, promise) }
+      return
+    }
+    if (AccessibilityMicController.mode(context) == AccessibilityMicController.MODE) {
+      offlineForegroundAction(promise, "FOREGROUND_REQUIRED") { foreground ->
+        if (!foreground()) promise.reject("FOREGROUND_REQUIRED", "FOREGROUND_REQUIRED")
+        else AutoRecordingController.setEnabled(context, true, promise)
+      }
       return
     }
     val activity = currentActivity
@@ -88,6 +232,17 @@ class CallRecorderModule(private val context: ReactApplicationContext) : ReactCo
       NativeWirelessAudioBridge.startHelper(context, connectionPort, pairing.port, pairing.key, pairing.appUid, promise)
     } catch (e: Exception) { promise.reject("SYSTEM_CONNECTION_FAILED", e.message, e) }
   }
+  @ReactMethod fun setOfflineRecoveryEnabled(enabled: Boolean, promise: Promise) {
+    offlineForegroundAction(promise) { foreground -> NativeWirelessAudioBridge.setOfflineRecoveryEnabled(context, enabled, foreground, promise) }
+  }
+  @ReactMethod fun connectSystemRecorderOffline(promise: Promise) {
+    offlineForegroundAction(promise) { foreground -> NativeWirelessAudioBridge.startHelperOffline(context, foreground, promise) }
+  }
+  @ReactMethod fun cancelOfflineRecovery(promise: Promise) {
+    cancelOfflineEntry()
+    RestartReminderController.cancelResume(context)
+    NativeWirelessAudioBridge.cancelOfflineRecovery(promise)
+  }
   @ReactMethod fun openSystemAccessSetup(destination: String, promise: Promise) {
     val activity = currentActivity
     if (activity == null) { promise.reject("FOREGROUND_REQUIRED", AppText.choose("פתח את האפליקציה כדי להגדיר גישה", "Open the app to configure access")); return }
@@ -97,6 +252,7 @@ class CallRecorderModule(private val context: ReactApplicationContext) : ReactCo
           "about" -> Intent(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS)
           "developer" -> Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
           "wireless" -> Intent("android.settings.WIRELESS_DEBUGGING_SETTINGS")
+          "wifi" -> Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
           else -> throw IllegalArgumentException(AppText.choose("יעד הגדרה לא תקין", "The setup destination is invalid"))
         }
         try { activity.startActivity(intent) }
@@ -108,6 +264,13 @@ class CallRecorderModule(private val context: ReactApplicationContext) : ReactCo
     }
   }
   @ReactMethod fun startRecording(source: String, promise: Promise) {
+    if (source == AccessibilityMicController.MODE) {
+      offlineForegroundAction(promise, "FOREGROUND_REQUIRED") { foreground ->
+        if (!foreground()) promise.reject("FOREGROUND_REQUIRED", "FOREGROUND_REQUIRED")
+        else RecordingService.start(context, source, promise)
+      }
+      return
+    }
     val activity = currentActivity
     if (activity == null || activity.isFinishing) {
       promise.reject("FOREGROUND_REQUIRED", AppText.choose("פתח את האפליקציה כדי להתחיל הקלטה", "Open the app to start recording")); return
@@ -127,6 +290,13 @@ class CallRecorderModule(private val context: ReactApplicationContext) : ReactCo
           putString("captureSource", item.optString("captureSource", "microphone"))
           putInt("channels", item.optInt("channels", 1))
           putBoolean("startedAutomatically", item.optBoolean("startedAutomatically", false))
+          if (item.optString("captureSource") == AccessibilityMicController.MODE) {
+            putBoolean("experimental", true); putString("audioSource", "voice_recognition")
+            putBoolean("remoteAudioVerified", false); putBoolean("silencingKnown", item.optBoolean("silencingKnown", false))
+            putString("inputRoute", item.optString("inputRoute", "unknown"))
+            putString("routeAtStart", item.optString("routeAtStart", "unknown")); putString("routeAtEnd", item.optString("routeAtEnd", "unknown"))
+            putBoolean("routeChanged", item.optBoolean("routeChanged", false))
+          }
           if (item.has("callDisplayName")) putString("callDisplayName", item.optString("callDisplayName"))
           if (item.has("callPackage")) putString("callPackage", item.optString("callPackage"))
           if (item.has("exportFileName")) putString("exportFileName", item.optString("exportFileName"))

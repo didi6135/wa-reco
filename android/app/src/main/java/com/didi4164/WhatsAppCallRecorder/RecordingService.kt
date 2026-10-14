@@ -34,6 +34,7 @@ class RecordingService : Service() {
   private var workerRunning = false
   @Volatile private var automaticArmed = false
   @Volatile private var automaticCapture = false
+  private var automaticMode = AccessibilityMicController.SYSTEM
   private var foregroundPromoted = false
 
   companion object {
@@ -53,24 +54,34 @@ class RecordingService : Service() {
     private var outputLevel = 0.0
     private var microphoneLevel = 0.0
     private var silenced = false
+    private var silencingKnown = false
+    private var inputRoute = "unknown"
     private var error: String? = null
     private var startPromise: Promise? = null
     private val stopPromises = mutableListOf<Promise>()
     private val mainHandler = Handler(Looper.getMainLooper())
     @Volatile private var activeService: RecordingService? = null
     private var pendingArm: CompletableFuture<Unit>? = null
+    private var pendingArmMode = AccessibilityMicController.SYSTEM
 
     fun isAutomaticArmed(): Boolean = activeService?.automaticArmed == true
     fun isAutomaticCapture(): Boolean = activeService?.let { it.automaticCapture && isBusyForOwner() } == true
+    fun isArming(): Boolean = pendingArm != null
+    fun automaticMode(): String? = activeService?.takeIf { it.automaticArmed }?.automaticMode
 
     /** One visible user action establishes the microphone FGS before any background call event. */
     fun armAutomatic(context: Context): CompletableFuture<Unit> {
       check(Looper.myLooper() == Looper.getMainLooper()) { AppText.choose("יש להפעיל מצב אוטומטי מתוך האפליקציה.", "Enable automatic recording from the app.") }
+      check(!NativeWirelessAudioBridge.isOfflineRecoveryRunning()) { AppText.choose("המתן לסיום הכנת רכיב ההקלטה לפני הפעלת מצב אוטומטי.", "Wait for recorder preparation to finish before arming automatic recording.") }
       if (isAutomaticArmed()) return CompletableFuture.completedFuture(Unit)
       check(!isBusyForOwner() && pendingArm == null) { AppText.choose("סיימו את ההקלטה הפעילה לפני הפעלת מצב אוטומטי.", "Finish the current recording before enabling automatic recording.") }
-      check(UsbAudioBridge.isConnected() && !RecorderReadinessService.isStopping()) { AppText.choose("יש להפעיל תחילה את רכיב ההקלטה.", "Activate the recording component first.") }
+      val mode = AccessibilityMicController.mode(context)
+      check(if (mode == AccessibilityMicController.MODE) AccessibilityMicController.ready(context)
+        else UsbAudioBridge.isConnected() && !RecorderReadinessService.isStopping()) {
+        AppText.choose("יש להשלים תחילה את הגדרת מצב ההקלטה שנבחר.", "Complete setup for the selected recording mode first.") }
       check(context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) { AppText.choose("נדרשת הרשאת מיקרופון.", "Microphone permission is required.") }
       val request = CompletableFuture<Unit>()
+      pendingArmMode = mode
       pendingArm = request
       try {
         context.startForegroundService(Intent(context, RecordingService::class.java).setAction(ACTION_ARM))
@@ -97,19 +108,49 @@ class RecordingService : Service() {
         else if (!service.workerRunning) { service.leaveForeground(); service.stopSelf() }
       }
     }
+    fun disarmSystemAutomatic(context: Context) {
+      if (activeService?.automaticMode == AccessibilityMicController.SYSTEM) disarmAutomatic(context)
+    }
 
     fun startAutomaticCapture(context: Context, acceptedUid: Int,
       acceptedSignals: Collection<AutoCallPolicy.NotificationSignal>): Boolean {
       check(Looper.myLooper() == Looper.getMainLooper())
       val service = activeService ?: return false
-      if (!service.automaticArmed || service.workerRunning || RecorderReadinessService.isStopping() || !UsbAudioBridge.isConnected()) return false
+      if (!service.automaticArmed || service.workerRunning || service.automaticMode != AccessibilityMicController.SYSTEM ||
+        RecorderReadinessService.isStopping() || !UsbAudioBridge.isConnected()) return false
       synchronized(lock) {
-        if (busy) return false
+        // Recovery publishes its reservation before checking this same busy lock.
+        // No notification event can begin PCM while the helper is being verified.
+        if (busy || NativeWirelessAudioBridge.isOfflineRecoveryRunning()) return false
         busy = true; recording = false; error = null; source = "usb"; startPromise = null
       }
       val identity = WhatsAppCallNotificationService.nameForAcceptedStart(context, acceptedUid, acceptedSignals)
       service.beginWorker("usb", true, identity)
       return true
+    }
+
+    fun startAccessibilityAutomaticCapture(context: Context): Boolean {
+      check(Looper.myLooper() == Looper.getMainLooper())
+      val service = activeService ?: return false
+      if (!service.automaticArmed || service.automaticMode != AccessibilityMicController.MODE || service.workerRunning ||
+        !AccessibilityMicController.ready(context) || context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return false
+      synchronized(lock) {
+        if (busy || NativeWirelessAudioBridge.isOfflineRecoveryRunning()) return false
+        busy = true; recording = false; error = null; source = AccessibilityMicController.MODE; startPromise = null
+      }
+      // This route has no verified audio-owner UID. Do not attach the shell route's identity claim.
+      service.beginWorker(AccessibilityMicController.MODE, true)
+      return true
+    }
+
+    fun onAccessibilityDisconnected(context: Context) {
+      val stopOwned = {
+        activeService?.let { service ->
+          if (service.captureSource == AccessibilityMicController.MODE && service.workerRunning) service.requestCaptureStop()
+          if (service.automaticMode == AccessibilityMicController.MODE && service.automaticArmed) disarmAutomatic(context)
+        }
+      }
+      if (Looper.myLooper() == Looper.getMainLooper()) stopOwned() else mainHandler.post { stopOwned() }
     }
 
     fun stopAutomaticCapture(context: Context) {
@@ -129,6 +170,9 @@ class RecordingService : Service() {
         putDouble("outputLevel", if (recording) outputLevel else 0.0)
         putDouble("microphoneLevel", if (recording) microphoneLevel else 0.0)
         putBoolean("isSilenced", if (recording) silenced else false)
+        putBoolean("silencingKnown", recording && silencingKnown)
+        putString("inputRoute", if (recording) inputRoute else "unknown")
+        putString("route", AccessibilityMicController.route(context))
         putDouble("silentForMs", (if (recording) now - lastSoundAt else 0L).toDouble())
         putInt("audioMode", (context.getSystemService(Context.AUDIO_SERVICE) as AudioManager).mode)
         putString("error", error)
@@ -136,8 +180,11 @@ class RecordingService : Service() {
     }
     fun start(context: Context, captureSource: String, promise: Promise) {
       synchronized(lock) {
+        if (NativeWirelessAudioBridge.isOfflineRecoveryRunning()) {
+          promise.reject("RECORDER_PREPARING", AppText.choose("המתן לסיום הכנת רכיב ההקלטה לפני התחלת הקלטה.", "Wait for recorder preparation to finish before starting a recording.")); return
+        }
         if (busy) { promise.reject("ALREADY_RECORDING", AppText.choose("הקלטה כבר פעילה", "A recording is already active")); return }
-        if (captureSource !in listOf("microphone", "usb")) {
+        if (captureSource !in listOf("microphone", "usb", AccessibilityMicController.MODE)) {
           promise.reject("INVALID_SOURCE", AppText.choose("מקור הקלטה לא תקין", "The recording source is invalid")); return
         }
         if (captureSource == "usb" && RecorderReadinessService.isStopping()) {
@@ -145,6 +192,12 @@ class RecordingService : Service() {
         }
         if (captureSource == "usb" && !UsbAudioBridge.isConnected()) {
           promise.reject("USB_DISCONNECTED", AppText.choose("יש להשלים את הגדרת הקלטת השיחה לפני התחלת ההקלטה", "Complete call recording setup before starting a recording")); return
+        }
+        if (captureSource == AccessibilityMicController.MODE) {
+          val rejected = AccessibilityMicCapturePolicy.rejection(Build.VERSION.SDK_INT,
+            AccessibilityMicController.mode(context) == AccessibilityMicController.MODE, AccessibilityMicController.enabled(context),
+            AccessibilityMicService.isConnected(), context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+          if (rejected != null) { promise.reject(rejected, rejected); return }
         }
         if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
           promise.reject("MIC_PERMISSION", AppText.choose("נדרשת הרשאת מיקרופון", "Microphone permission is required")); return
@@ -173,8 +226,9 @@ class RecordingService : Service() {
       }
     }
     fun isBusyForOwner(): Boolean = synchronized(lock) { busy }
+    fun isBusyForSystemOwner(): Boolean = synchronized(lock) { busy && source == "usb" }
     fun requestOwnerStop(context: Context) {
-      if (isBusyForOwner()) {
+      if (isBusyForSystemOwner()) {
         context.startService(Intent(context, RecordingService::class.java).setAction(ACTION_STOP))
       }
     }
@@ -190,7 +244,12 @@ class RecordingService : Service() {
         return START_NOT_STICKY
       }
       try {
-        check(UsbAudioBridge.isConnected() && !RecorderReadinessService.isStopping()) { AppText.choose("רכיב ההקלטה אינו מחובר.", "The recording component is disconnected.") }
+        check(!NativeWirelessAudioBridge.isOfflineRecoveryRunning()) { AppText.choose("רכיב ההקלטה עדיין בהכנה.", "The recording component is still being prepared.") }
+        check(AccessibilityMicController.mode(this) == pendingArmMode) { "INVALID_RECORDING_MODE" }
+        check(if (pendingArmMode == AccessibilityMicController.MODE) AccessibilityMicController.ready(this)
+          else UsbAudioBridge.isConnected() && !RecorderReadinessService.isStopping()) { "AUTO_SETUP_REQUIRED" }
+        check(checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) { "MIC_PERMISSION" }
+        automaticMode = pendingArmMode
         showArmedNotification()
         automaticArmed = true
         RecorderReadinessService.refreshAutomaticState()
@@ -278,23 +337,35 @@ class RecordingService : Service() {
     var soundMs = 0L
     var metadata: org.json.JSONObject? = null
     var output: RandomAccessFile? = null
+    var hadSilencingObservation = false
+    val experimental = captureSource == AccessibilityMicController.MODE
+    val initialRoute = AccessibilityMicController.route(this)
+    var finalInputRoute = "unknown"
+    var routeChanged = false
     try {
+      if (stopRequested) return
+      if (experimental && !AccessibilityMicController.ready(this)) throw IllegalStateException("ACCESSIBILITY_MIC_REQUIRED")
       val minimum = AudioRecord.getMinBufferSize(WavFile.SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
       check(minimum > 0) { AppText.choose("המכשיר אינו תומך בהקלטה בתצורה הזאת", "This device does not support the recording configuration") }
-      val recorder = AudioRecord.Builder().setAudioSource(MediaRecorder.AudioSource.MIC)
+      val recorder = AudioRecord.Builder().setAudioSource(if (experimental) MediaRecorder.AudioSource.VOICE_RECOGNITION else MediaRecorder.AudioSource.MIC)
         .setAudioFormat(AudioFormat.Builder().setSampleRate(WavFile.SAMPLE_RATE)
           .setChannelMask(AudioFormat.CHANNEL_IN_MONO).setEncoding(AudioFormat.ENCODING_PCM_16BIT).build())
         .setBufferSizeInBytes(maxOf(minimum * 2, 8192)).build()
       audioRecord = recorder
       check(recorder.state == AudioRecord.STATE_INITIALIZED) { AppText.choose("המיקרופון אינו זמין", "The microphone is unavailable") }
-      metadata = RecordingStore.create(this)
+      metadata = RecordingStore.create(this, captureSource)
+      metadata.put("startedAutomatically", automaticCapture)
+      if (experimental) metadata.put("experimental", true).put("audioSource", "voice_recognition")
+        .put("remoteAudioVerified", false).put("routeAtStart", initialRoute)
       output = RandomAccessFile(RecordingStore.file(this, metadata.getString("id"), ".pending.wav"), "rw")
       output.write(WavFile.header(0L))
+      if (stopRequested) return
+      if (experimental && !AccessibilityMicController.ready(this)) throw IllegalStateException("ACCESSIBILITY_MIC_REQUIRED")
       recorder.startRecording()
       check(recorder.recordingState == AudioRecord.RECORDSTATE_RECORDING) { AppText.choose("Android לא אפשר התחלת הקלטה", "Android did not allow recording to start") }
       synchronized(lock) {
         recording = true; startedAt = SystemClock.elapsedRealtime(); lastSoundAt = startedAt
-        level = 0.0; outputLevel = 0.0; microphoneLevel = 0.0; silenced = false; elapsed = 0L
+        level = 0.0; outputLevel = 0.0; microphoneLevel = 0.0; silenced = false; silencingKnown = false; inputRoute = "unknown"; elapsed = 0L
       }
       mainHandler.post {
         synchronized(lock) {
@@ -306,6 +377,7 @@ class RecordingService : Service() {
       val samples = ShortArray(2048)
       val bytes = ByteArray(samples.size * 2)
       while (!stopRequested) {
+        if (experimental && !AccessibilityMicController.ready(this)) throw IllegalStateException("ACCESSIBILITY_MIC_REQUIRED")
         val count = recorder.read(samples, 0, samples.size, AudioRecord.READ_BLOCKING)
         if (count < 0) {
           if (stopRequested) break
@@ -326,11 +398,15 @@ class RecordingService : Service() {
         output.write(bytes, 0, count * 2)
         check(output.length() < 0xffffffe0L) { AppText.choose("ההקלטה הגיעה לגודל הקובץ המרבי", "The recording reached the maximum file size") }
         val rms = sqrt(sum / count).coerceIn(0.0, 1.0)
-        val policySilenced = Build.VERSION.SDK_INT >= 29 && (recorder.activeRecordingConfiguration?.isClientSilenced == true)
+        val configuration = if (Build.VERSION.SDK_INT >= 29) recorder.activeRecordingConfiguration else null
+        val policySilenced = configuration?.isClientSilenced == true
+        hadSilencingObservation = hadSilencingObservation || configuration != null
+        finalInputRoute = AccessibilityMicController.inputRoute(recorder.routedDevice)
+        routeChanged = routeChanged || AccessibilityMicController.route(this) != initialRoute
         wasSilenced = wasSilenced || policySilenced
         if (rms >= CaptureQuality.SOUND_THRESHOLD) soundMs += count * 1000L / WavFile.SAMPLE_RATE
         synchronized(lock) {
-          level = rms; microphoneLevel = rms; silenced = policySilenced
+          level = rms; microphoneLevel = rms; silenced = policySilenced; silencingKnown = configuration != null; inputRoute = finalInputRoute
           if (rms >= CaptureQuality.SOUND_THRESHOLD) lastSoundAt = SystemClock.elapsedRealtime()
         }
       }
@@ -343,6 +419,8 @@ class RecordingService : Service() {
           WavFile.finalize(output)
           output.close(); output = null
           metadata.put("microphoneSoundMs", soundMs).put("outputSoundMs", 0L)
+          if (experimental) metadata.put("silencingKnown", hadSilencingObservation).put("inputRoute", finalInputRoute)
+            .put("routeAtEnd", AccessibilityMicController.route(this)).put("routeChanged", routeChanged)
           RecordingStore.finish(this, metadata, CaptureQuality.classify(soundMs, wasSilenced, failure != null), wasSilenced)
         }
       } catch (e: Exception) { failure = e }
@@ -483,7 +561,7 @@ class RecordingService : Service() {
         // Finish the old service before allowing the next start or settling JS.
         // A worker must not release busy and later settle a new session's promise.
         elapsed = if (recording) SystemClock.elapsedRealtime() - startedAt else 0L
-        recording = false; level = 0.0; outputLevel = 0.0; microphoneLevel = 0.0; silenced = false; error = failure?.message
+        recording = false; level = 0.0; outputLevel = 0.0; microphoneLevel = 0.0; silenced = false; silencingKnown = false; inputRoute = "unknown"; error = failure?.message
         workerRunning = false
         val finishedAutomatic = automaticCapture
         automaticCapture = false

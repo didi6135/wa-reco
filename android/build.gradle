@@ -24,13 +24,13 @@ buildscript {
 apply plugin: "com.facebook.react.rootproject"
 
 // Expo's Fabric objects exceed Ninja's Windows path limit in this workspace.
-// Keep generated native builds short for libraries as well as the app.
+// Keep generated native builds inside this checkout for libraries as well as the app.
 if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
     subprojects { nativeProject ->
         nativeProject.plugins.withId('com.android.library') {
             def nativeAndroid = nativeProject.extensions.getByName('android')
             nativeAndroid.externalNativeBuild.cmake.buildStagingDirectory =
-                file("${System.getenv('SystemDrive')}/wa-cxx/${nativeProject.name}")
+                rootProject.file('../artifacts/cxx/' + nativeProject.name)
             nativeAndroid.defaultConfig.externalNativeBuild.cmake.arguments '-DCMAKE_OBJECT_PATH_MAX=240'
         }
     }

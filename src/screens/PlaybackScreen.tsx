@@ -132,7 +132,8 @@ export default function PlaybackScreen() {
       <Text style={styles.title}>{displayRecordingTitle(recording.title, recording.callDisplayName)}</Text>
       <Text style={styles.date}>{formatDate(recording.date)}</Text>
       <View style={styles.card}>
-        <Text style={styles.source}>{recording.source === 'legacy' ? t('copy267') : recording.captureSource === 'usb' ? t('copy246') : t('copy245')}</Text>
+        <Text style={styles.source}>{recording.source === 'legacy' ? t('copy267') : recording.captureSource === 'accessibilityMic' ? t('accessibilityMicLabel') : recording.captureSource === 'usb' ? t('copy246') : t('copy245')}</Text>
+        {recording.captureSource === 'accessibilityMic' && <Text style={styles.warning}>{t('accessibilityMicRecordingNote')}</Text>}
         {warning && <Text style={styles.warning}>{warning}</Text>}
         {channelWarning && <Text style={styles.warning}>{channelWarning}</Text>}
         {isRecording && <Text style={styles.warning}>{t('copy268')}</Text>}

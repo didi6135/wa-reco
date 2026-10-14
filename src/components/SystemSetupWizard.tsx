@@ -6,6 +6,7 @@ import { WaveMark } from './Visuals';
 import { colors, ui } from '../theme';
 import { SystemAccessStatus } from '../services/NativeRecorder';
 import { phoneSetupStep } from '../setup/readiness';
+import OfflineRecoveryCard from './OfflineRecoveryCard';
 
 const messageOf = (failure: unknown) => localizedError(failure);
 const readPort = (value: string): number | null => {
@@ -24,6 +25,7 @@ export default function SystemSetupWizard({ compact = false, focused = false, on
   const access = accessOverride ?? storedAccess;
   const [showManualPairing, setShowManualPairing] = useState(false);
   const [showManualConnection, setShowManualConnection] = useState(false);
+  const [showOrdinaryActivation, setShowOrdinaryActivation] = useState(false);
   const [showSetupDetails, setShowSetupDetails] = useState(false);
   const [pairingPort, setPairingPort] = useState('');
   const [pairingCode, setPairingCode] = useState('');
@@ -32,7 +34,7 @@ export default function SystemSetupWizard({ compact = false, focused = false, on
   const pairingSetup = access.pairingSetup;
   const developerEnabled = access.developerOptionsEnabled ?? access.wirelessDebuggingEnabled;
   const canPair = developerEnabled && access.wirelessDebuggingEnabled;
-  const disabled = isBusy || isRecording || access.connecting || pairingSetup?.pairing === true;
+  const disabled = isBusy || isRecording || access.connecting || access.offlineRecovery?.running === true || pairingSetup?.pairing === true;
   const compatibilityText = deviceInfo && (deviceInfo.sdk === 34 || deviceInfo.sdk === 35)
     ? t('copy090')
     : deviceInfo && deviceInfo.sdk > 36
@@ -110,6 +112,12 @@ export default function SystemSetupWizard({ compact = false, focused = false, on
 
   if (focused) {
     const step = phoneSetupStep(accessOverride === null ? null : access);
+    const recoveryAvailable = access.paired && access.offlineRecovery?.supported &&
+      (step === 'wireless' || step === 'connect');
+    // Ordinary activation stays first until the user explicitly prepares recovery.
+    // Once opted in, show its next action without a competing activation block.
+    if (recoveryAvailable && access.offlineRecovery?.enabled && !showOrdinaryActivation)
+      return <OfflineRecoveryCard compact onOpenSetup={() => setShowOrdinaryActivation(true)} />;
     const text = {
       checking: [t('copy106'), t('copy107')],
       ready: [t('copy108'), t('copy109')],
@@ -151,6 +159,12 @@ export default function SystemSetupWizard({ compact = false, focused = false, on
         <TextInput style={styles.input} value={pairingCode} onChangeText={value => setPairingCode(value.replace(/\D/g, ''))} keyboardType="number-pad" maxLength={6} editable={!disabled} secureTextEntry placeholder={t('copy144')} placeholderTextColor={colors.muted} accessibilityLabel={t('copy145')} />
         <TouchableOpacity style={[styles.primaryButton, disabled && styles.disabled]} onPress={() => { void pairManually(); }} disabled={disabled} accessibilityRole="button"><Text style={styles.primaryText}>{t('copy146')}</Text></TouchableOpacity>
       </View>}
+      {recoveryAvailable && !access.offlineRecovery?.enabled && step === 'connect' &&
+        <OfflineRecoveryCard compact onOpenSetup={() => { void openSetup('wireless'); }} />}
+      {recoveryAvailable && access.offlineRecovery?.enabled && showOrdinaryActivation &&
+        <TouchableOpacity style={styles.textButton} onPress={() => setShowOrdinaryActivation(false)} disabled={disabled} accessibilityRole="button">
+          <Text style={styles.link}>{t('offlineRecoveryReturn')}</Text>
+        </TouchableOpacity>}
       {errorText && <Text style={styles.error} accessibilityLiveRegion="polite">{localizedError(errorText)}</Text>}
     </View>;
   }

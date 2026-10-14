@@ -24,11 +24,8 @@ public commit `d1c9118494edef482ffa3d725fde5f6a7ec5e0f7` and its original three
 release assets.
 
 `SOURCE_MANIFEST.json` records the source snapshot used for that release. Later
-development commits on `main` can differ from those recorded file hashes;
-the manifest is not silently updated to claim that those changes
-were present in the already published APK. The Android compatibility probes
-and setup-diagnostics correction on main are unreleased development work,
-with their measured scope in [the matrix](android-device-compatibility.md).
-Use the release tag and matching
+documentation commits on `main` can differ from those recorded file hashes;
+the manifest is not silently updated to claim that those documentation changes
+were present in the already published APK. Use the release tag and matching
 archives when checking an exact distribution. Future application releases need
 their own newly exported source, manifests and verified artifacts.

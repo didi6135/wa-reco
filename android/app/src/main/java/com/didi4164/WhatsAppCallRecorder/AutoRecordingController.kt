@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.os.Handler
 import android.os.Build
 import android.os.Looper
@@ -30,6 +31,7 @@ object AutoRecordingController {
   private val main = Handler(Looper.getMainLooper())
   private val io = Executors.newSingleThreadExecutor { task -> Thread(task, "AutomaticCallMonitorIo") }
   private val policy = AutoCallPolicy()
+  private val micPolicy = AccessibilityMicCallPolicy()
   private val evidenceWatchdog = AutoEvidenceRecoveryWatchdog()
   private val initializationLock = Any()
   @Volatile private var appContext: Context? = null
@@ -37,6 +39,7 @@ object AutoRecordingController {
   @Volatile private var listenerConnected = false
   @Volatile private var monitoringReady = false
   @Volatile private var desiredMonitoring = false
+  private var restartActivation: Long? = null // Main thread: revoke only this notification-owned arming.
   @Volatile private var generation = 0L
   @Volatile private var lastError: String? = null
   @Volatile private var paused = false
@@ -74,6 +77,10 @@ object AutoRecordingController {
 
   private fun hasMicrophone(context: Context): Boolean =
     context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+  private fun accessibilityMode(context: Context): Boolean = AccessibilityMicController.mode(context) == AccessibilityMicController.MODE
+  private fun publicAudioMode(context: Context): Int? = runCatching {
+    (context.getSystemService(Context.AUDIO_SERVICE) as AudioManager).mode
+  }.getOrNull()
 
   /** Read-only. A microphone FGS may run with its notice hidden, which this feature refuses. */
   private fun hasVisibleNotifications(context: Context, requireRecordingChannel: Boolean = false): Boolean = runCatching {
@@ -94,11 +101,15 @@ object AutoRecordingController {
   fun statusMap(context: Context): WritableMap {
     val owner = initialize(context)
     val access = hasNotificationAccess(owner)
-    val helper = UsbAudioBridge.isConnected()
+    val helper = UsbAudioBridge.isConnected() && !NativeWirelessAudioBridge.isOfflineRecoveryRunning()
     val transportOpen = UsbAudioBridge.isTransportOpen()
     val actualArmed = RecordingService.isAutomaticArmed()
+    val mode = AccessibilityMicController.mode(owner)
+    val micMode = mode == AccessibilityMicController.MODE
+    val modeReady = if (micMode) AccessibilityMicController.ready(owner) else helper
     val visibleNotifications = hasVisibleNotifications(owner, requireRecordingChannel = actualArmed)
-    val armed = enabled && monitoringReady && actualArmed && visibleNotifications && hasMicrophone(owner)
+    val armed = enabled && monitoringReady && actualArmed && RecordingService.automaticMode() == mode &&
+      (!micMode || modeReady) && visibleNotifications && hasMicrophone(owner) && !NativeWirelessAudioBridge.isOfflineRecoveryRunning()
     val recording = armed && RecordingService.isAutomaticCapture()
     val state = when {
       !enabled -> if (modeEvidenceFailed) "error" else "off"
@@ -106,15 +117,16 @@ object AutoRecordingController {
       !access -> "needs_access"
       !listenerConnected -> "needs_access"
       modeEvidenceFailed -> "error"
-      !transportOpen || !armed -> "needs_activation"
+      (!micMode && !transportOpen) || !armed -> "needs_activation"
       recording -> "recording"
-      recoveringEvidence || !helper -> "paused"
+      recoveringEvidence || !modeReady -> "paused"
       lastError != null -> "error"
       paused -> "paused"
       else -> "ready"
     }
     return Arguments.createMap().apply {
       putBoolean("enabled", enabled)
+      putString("mode", mode); putBoolean("modeReady", modeReady); putBoolean("experimental", micMode)
       putBoolean("armed", armed)
       putBoolean("notificationAccessGranted", access)
       putBoolean("notificationsEnabled", visibleNotifications)
@@ -126,26 +138,26 @@ object AutoRecordingController {
     }
   }
 
-  fun setEnabled(context: Context, enable: Boolean, promise: Promise) {
+  fun setEnabled(context: Context, enable: Boolean, promise: Promise, restartGuard: (() -> Boolean)? = null) {
     val owner = initialize(context)
     onMain {
       if (!enable) {
-        enabled = false
-        owner.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ENABLED, false).apply()
-        lastError = null
-        modeEvidenceFailed = false
-        pauseArming(owner, "disabled")
-        policy.reset()
-        paused = false
+        disableForModeChange(owner)
         promise.resolve(statusMap(owner))
         return@onMain
       }
+      if (restartGuard != null && !restartGuard()) {
+        promise.reject("RESTART_RESUME_REVOKED", "RESTART_RESUME_REVOKED"); return@onMain
+      }
       val alreadyArmed = enabled && monitoringReady && RecordingService.isAutomaticArmed()
       val prerequisite = when {
+        NativeWirelessAudioBridge.isOfflineRecoveryRunning() -> AppText.choose("המתן לסיום הכנת רכיב ההקלטה לפני הפעלת מצב אוטומטי.", "Wait for recorder preparation to finish before arming automatic recording.")
         !hasVisibleNotifications(owner, requireRecordingChannel = RecordingService.isAutomaticArmed()) -> NOTIFICATION_VISIBILITY_MESSAGE
         !hasNotificationAccess(owner) -> AppText.choose("אפשר גישה להתראות עבור מקליט השיחות בהגדרות הטלפון.", "Allow notification access for wa-reco in Android Settings.")
         !listenerConnected -> AppText.choose("הגישה להתראות עדיין לא התחברה. חזור לאפליקציה ונסה שוב.", "Notification access has not connected yet. Return to the app and try again.")
-        (if (alreadyArmed) !UsbAudioBridge.isTransportOpen() else !UsbAudioBridge.isConnected()) -> AppText.choose("הפעל תחילה את רכיב ההקלטה מתוך האפליקציה.", "Activate the recording component from the app first.")
+        (if (accessibilityMode(owner)) !AccessibilityMicController.ready(owner)
+          else if (alreadyArmed) !UsbAudioBridge.isTransportOpen() else !UsbAudioBridge.isConnected()) ->
+          AppText.choose("השלם תחילה את הגדרת מצב ההקלטה שנבחר.", "Complete setup for the selected recording mode first.")
         !hasMicrophone(owner) -> AppText.choose("אפשר הרשאת מיקרופון למקליט השיחות.", "Allow microphone access for wa-reco.")
         else -> null
       }
@@ -156,11 +168,13 @@ object AutoRecordingController {
         return@onMain
       }
       if (alreadyArmed) {
+        RestartReminderController.clear(owner)
         evaluate(owner)
         promise.resolve(statusMap(owner))
         return@onMain
       }
       val activation = ++generation
+      restartActivation = if (restartGuard != null) activation else null
       desiredMonitoring = true
       monitoringReady = false
       lastError = null
@@ -169,14 +183,18 @@ object AutoRecordingController {
       recoveringEvidence = false
       evidenceWatchdog.reset()
       policy.reset()
+      micPolicy.reset()
+      if (accessibilityMode(owner)) micPolicy.prime(notifications)
       try {
         RecordingService.armAutomatic(owner).whenComplete { _, failure -> onMain {
           if (activation != generation || !desiredMonitoring) {
             if (!desiredMonitoring) RecordingService.disarmAutomatic(owner)
             promise.reject("AUTO_ACTIVATION_CANCELLED", AppText.choose("הפעלת ההקלטה האוטומטית בוטלה.", "Automatic recording activation was canceled."))
+          } else if (restartGuard != null && !restartGuard()) {
+            activationFailed(owner, activation, promise, AppText.choose("בקשת החידוש בוטלה. חזרו לאפליקציה כדי להפעיל שוב.", "The resume request was canceled. Return to the app to activate again."))
           } else if (failure != null) {
             activationFailed(owner, activation, promise, AppText.choose("לא ניתן להפעיל הקלטה אוטומטית. פתח את האפליקציה ונסה שוב.", "Automatic recording could not be armed. Open the app and try again."))
-          } else enableMonitoring(owner, activation, promise)
+          } else enableMonitoring(owner, activation, promise, restartGuard)
         } }
       } catch (_: Exception) {
         activationFailed(owner, activation, promise, AppText.choose("לא ניתן להפעיל הקלטה אוטומטית. פתח את האפליקציה ונסה שוב.", "Automatic recording could not be armed. Open the app and try again."))
@@ -184,7 +202,44 @@ object AutoRecordingController {
     }
   }
 
-  private fun enableMonitoring(owner: Context, activation: Long, promise: Promise) {
+  fun disableForModeChange(context: Context) {
+    check(Looper.myLooper() == Looper.getMainLooper())
+    val owner = initialize(context)
+    enabled = false
+    owner.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ENABLED, false).apply()
+    RestartReminderController.clear(owner)
+    lastError = null; modeEvidenceFailed = false
+    pauseArming(owner, "disabled"); policy.reset(); micPolicy.reset(); paused = false
+  }
+
+  fun hasObservedCall(): Boolean = notifications.any { AutoCallPolicy.allowsPackage(it.packageName) &&
+    !it.groupSummary && (AutoCallPolicy.isOngoingCall(it) || it.callType == 1 || it.hasAnswer) }
+
+  fun cancelRestartArming(context: Context) {
+    onMain {
+      if (restartActivation != null && restartActivation == generation && desiredMonitoring)
+        pauseArming(initialize(context), "restart_resume_revoked")
+    }
+  }
+
+  private fun enableMonitoring(owner: Context, activation: Long, promise: Promise, restartGuard: (() -> Boolean)? = null) {
+    if (restartGuard != null && !restartGuard()) {
+      activationFailed(owner, activation, promise, AppText.choose("בקשת החידוש בוטלה.", "The resume request was canceled.")); return
+    }
+    if (accessibilityMode(owner)) {
+      if (activation != generation || !desiredMonitoring || !AccessibilityMicController.ready(owner) ||
+        !RecordingService.isAutomaticArmed() || RecordingService.automaticMode() != AccessibilityMicController.MODE ||
+        !hasMicrophone(owner) || !listenerConnected || !hasNotificationAccess(owner) ||
+        !hasVisibleNotifications(owner, requireRecordingChannel = true) || publicAudioMode(owner) == null) {
+        activationFailed(owner, activation, promise, AppText.choose("מצב המיקרופון הניסיוני אינו מוכן. בדוק את ההרשאות ונסה שוב מתוך האפליקציה.", "Experimental microphone mode is not ready. Check access and try again from the app.")); return
+      }
+      enabled = true; monitoringReady = true; recoveringEvidence = false; lastTransitionReason = "accessibility_armed"
+      restartActivation = null
+      owner.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ENABLED, true).apply()
+      RestartReminderController.clear(owner)
+      main.removeCallbacks(tick); main.post(tick)
+      promise.resolve(statusMap(owner)); return
+    }
     io.execute {
       var failure = false
       try {
@@ -194,24 +249,29 @@ object AutoRecordingController {
       main.post {
         if (activation != generation || !desiredMonitoring) {
           promise.reject("AUTO_ACTIVATION_CANCELLED", AppText.choose("הפעלת ההקלטה האוטומטית בוטלה.", "Automatic recording activation was canceled."))
+        } else if (restartGuard != null && !restartGuard()) {
+          activationFailed(owner, activation, promise, AppText.choose("בקשת החידוש בוטלה.", "The resume request was canceled."))
         } else if (!hasVisibleNotifications(owner, requireRecordingChannel = true)) {
           activationFailed(owner, activation, promise, NOTIFICATION_VISIBILITY_MESSAGE)
         } else if (failure || !UsbAudioBridge.isConnected() || !RecordingService.isAutomaticArmed() ||
           !hasMicrophone(owner) ||
           !hasNotificationAccess(owner) || !listenerConnected) {
           activationFailed(owner, activation, promise, AppText.choose("רכיב ההקלטה אינו מוכן לניטור שיחות. הפעל אותו מחדש ונסה שוב.", "The recording component is not ready to monitor calls. Reactivate it and try again."))
-        } else awaitKnownObservation(owner, activation, promise)
+        } else awaitKnownObservation(owner, activation, promise, restartGuard)
       }
     }
   }
 
-  private fun awaitKnownObservation(owner: Context, activation: Long, promise: Promise) {
+  private fun awaitKnownObservation(owner: Context, activation: Long, promise: Promise, restartGuard: (() -> Boolean)? = null) {
     val deadline = SystemClock.elapsedRealtime() + 5000L
     val check = object : Runnable {
       override fun run() {
         if (activation != generation || !desiredMonitoring) {
           promise.reject("AUTO_ACTIVATION_CANCELLED", AppText.choose("הפעלת ההקלטה האוטומטית בוטלה.", "Automatic recording activation was canceled."))
           return
+        }
+        if (restartGuard != null && !restartGuard()) {
+          activationFailed(owner, activation, promise, AppText.choose("בקשת החידוש בוטלה.", "The resume request was canceled.")); return
         }
         if (!hasVisibleNotifications(owner, requireRecordingChannel = true)) {
           activationFailed(owner, activation, promise, NOTIFICATION_VISIBILITY_MESSAGE)
@@ -233,7 +293,9 @@ object AutoRecordingController {
           modeEvidenceFailed = false
           enabled = true
           monitoringReady = true
+          restartActivation = null
           owner.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ENABLED, true).apply()
+          RestartReminderController.clear(owner)
           main.removeCallbacks(tick)
           main.post(tick)
           promise.resolve(statusMap(owner))
@@ -258,6 +320,7 @@ object AutoRecordingController {
   /** Preserve the enabled preference after owner loss; foreground activation is still required. */
   private fun pauseArming(owner: Context, reason: String = "activation_failed") {
     ++generation
+    restartActivation = null
     desiredMonitoring = false
     monitoringReady = false
     recoveringEvidence = false
@@ -266,10 +329,16 @@ object AutoRecordingController {
     main.removeCallbacks(tick)
     stopOwnedCapture(owner)
     RecordingService.disarmAutomatic(owner)
-    io.execute { runCatching { UsbAudioBridge.setCallMonitoring(false) } }
+    if (!accessibilityMode(owner)) io.execute { runCatching { UsbAudioBridge.setCallMonitoring(false) } }
   }
 
   private fun stopOwnedCapture(owner: Context) {
+    if (accessibilityMode(owner)) {
+      if (RecordingService.isAutomaticCapture() || micPolicy.acceptedEpisode() != null) {
+        RecordingService.stopAutomaticCapture(owner); micPolicy.onStopAccepted()
+      }
+      return
+    }
     if (RecordingService.isAutomaticCapture() || policy.recordingUid() != null) {
       RecordingService.stopAutomaticCapture(owner)
       policy.onStopAccepted()
@@ -299,11 +368,15 @@ object AutoRecordingController {
   }
 
   private fun evaluate(owner: Context) {
+    // Recovery is a readiness transaction. Leave call policy untouched until its
+    // authenticated helper has survived network/settings cleanup.
+    if (NativeWirelessAudioBridge.isOfflineRecoveryRunning()) return
     if (!hasVisibleNotifications(owner, requireRecordingChannel = true)) {
       lastError = NOTIFICATION_VISIBILITY_MESSAGE
       pauseArming(owner, "notification_visibility")
       return
     }
+    if (accessibilityMode(owner)) { evaluateAccessibility(owner); return }
     val prerequisiteFailure = when {
       !hasNotificationAccess(owner) -> "notification_access"
       !listenerConnected -> "listener_disconnected"
@@ -358,9 +431,37 @@ object AutoRecordingController {
     paused = policy.isCurrentCallSuppressed(attribution)
   }
 
+  private fun evaluateAccessibility(owner: Context) {
+    val mode = publicAudioMode(owner)
+    val ready = AccessibilityMicController.ready(owner) && hasMicrophone(owner) && hasNotificationAccess(owner) &&
+      listenerConnected && RecordingService.isAutomaticArmed() && RecordingService.automaticMode() == AccessibilityMicController.MODE && mode != null
+    if (!ready) {
+      lastError = AppText.choose("הגישה למיקרופון הניסיוני הופסקה. חזור לאפליקציה והפעל שוב הקלטה אוטומטית.", "Experimental microphone access stopped. Return to the app and arm automatic recording again.")
+      pauseArming(owner, "accessibility_access_lost"); return
+    }
+    when (val decision = micPolicy.step(SystemClock.elapsedRealtime(), notifications, mode, true,
+      RecordingService.isBusyForOwner(), RecordingService.isAutomaticCapture())) {
+      is AccessibilityMicCallPolicy.Decision.Start -> {
+        if (RecordingService.startAccessibilityAutomaticCapture(owner)) {
+          micPolicy.onStartAccepted(decision.episode); lastTransitionReason = "accessibility_capture_started"; lastError = null
+        } else {
+          micPolicy.suppress(notifications, mode)
+          lastError = AppText.choose("ההקלטה הניסיונית לא התחילה. בדוק את ההרשאות ונסה בשיחה הבאה.", "Experimental recording did not start. Check access and try the next call.")
+        }
+      }
+      AccessibilityMicCallPolicy.Decision.Stop -> stopOwnedCapture(owner)
+      AccessibilityMicCallPolicy.Decision.None -> Unit
+    }
+    paused = micPolicy.isSuppressed()
+  }
+
   fun onManualStop(context: Context) {
     val owner = initialize(context)
     onMain {
+      if (accessibilityMode(owner)) {
+        micPolicy.suppress(notifications, publicAudioMode(owner)); lastTransitionReason = "manual_stop"
+        stopOwnedCapture(owner); paused = micPolicy.isSuppressed(); return@onMain
+      }
       val audio = UsbAudioBridge.callAudioSnapshot()?.asPolicyObservation()
       val attribution = policy.resolveAttribution(SystemClock.elapsedRealtime(), notifications, audio)
       policy.suppressCurrentCall(attribution.startEligibleUid, delegated = attribution.delegated)
@@ -373,6 +474,12 @@ object AutoRecordingController {
   fun onRecorderCompleted(context: Context, failure: Throwable? = null) {
     val owner = initialize(context)
     onMain {
+      if (accessibilityMode(owner)) {
+        if (failure != null) lastError = AppText.choose("ההקלטה הניסיונית נעצרה. בדוק את ההרשאות לפני השיחה הבאה.", "Experimental recording stopped. Check access before the next call.")
+        micPolicy.onCaptureCompleted(failure != null)
+        if (enabled && monitoringReady) evaluate(owner)
+        return@onMain
+      }
       if (policy.acceptedEpisodeUid() != null && failure != null) {
         lastError = AppText.choose("ההקלטה האוטומטית נעצרה. בדוק את רכיב ההקלטה לפני השיחה הבאה.", "Automatic recording stopped. Check the recording component before the next call.")
       }
@@ -380,6 +487,16 @@ object AutoRecordingController {
       if (enabled && monitoringReady) evaluate(owner)
     }
   }
+
+  fun onAccessibilityDisconnected(context: Context) {
+    val owner = initialize(context)
+    onMain { if (accessibilityMode(owner)) {
+      if (monitoringReady || desiredMonitoring || RecordingService.isAutomaticArmed()) pauseArming(owner, "accessibility_disconnected")
+      lastError = AppText.choose("שירות הנגישות נותק. אשר אותו בהגדרות והפעל שוב הקלטה מתוך האפליקציה.", "Accessibility service disconnected. Enable it in Settings and activate recording again from the app.")
+    } }
+  }
+
+  fun onSystemOwnerStopping(context: Context) { if (!accessibilityMode(context)) onOwnerStopping(context) }
 
   fun onOwnerStopping(context: Context) {
     val owner = initialize(context)
@@ -430,7 +547,7 @@ object AutoRecordingController {
       else -> "ready"
     }
     val result = mutableListOf(
-      "AUTO_STATE enabled=$enabled armed=${RecordingService.isAutomaticArmed()} monitoringReady=$monitoringReady " +
+      "AUTO_STATE mode=${owner?.let { AccessibilityMicController.mode(it) } ?: "system"} enabled=$enabled armed=${RecordingService.isAutomaticArmed()} monitoringReady=$monitoringReady " +
         "desiredMonitoring=$desiredMonitoring listenerConnected=$listenerConnected helperConnected=${UsbAudioBridge.isConnected()} " +
         "transportOpen=${UsbAudioBridge.isTransportOpen()} notificationsVisible=$visible notificationAccess=$access " +
         "busy=${RecordingService.isBusyForOwner()} isRecording=${recordingState ?: false} " +

@@ -134,8 +134,8 @@ class RecorderReadinessService : Service() {
   private fun beginShutdown() {
     if (!shutdownStarted.compareAndSet(false, true)) return
     stopping = true
-    AutoRecordingController.onOwnerStopping(applicationContext)
-    RecordingService.disarmAutomatic(applicationContext)
+    AutoRecordingController.onSystemOwnerStopping(applicationContext)
+    RecordingService.disarmSystemAutomatic(applicationContext)
     settleStarts(IllegalStateException(AppText.choose("המקליט נכבה.", "The recorder has shut down.")))
     if (foreground && !destroyed) {
       try { showNotification(true) } catch (failure: Exception) {
@@ -148,10 +148,10 @@ class RecorderReadinessService : Service() {
     Thread({
       try {
         val deadline = SystemClock.elapsedRealtime() + STOP_TIMEOUT_MS
-        while (RecordingService.isBusyForOwner() && SystemClock.elapsedRealtime() < deadline) {
+        while (RecordingService.isBusyForSystemOwner() && SystemClock.elapsedRealtime() < deadline) {
           Thread.sleep(100L)
         }
-        if (RecordingService.isBusyForOwner()) Log.w("RecorderReadiness", "Recorder finalization exceeded owner stop deadline")
+        if (RecordingService.isBusyForSystemOwner()) Log.w("RecorderReadiness", "Recorder finalization exceeded owner stop deadline")
       } catch (_: InterruptedException) { Thread.currentThread().interrupt() }
       finally {
         try { UsbAudioBridge.disconnectCurrent() } catch (failure: Exception) {
@@ -206,7 +206,7 @@ class RecorderReadinessService : Service() {
     settleStarts(IllegalStateException(AppText.choose("מצב המוכנות הופסק.", "Recording readiness stopped.")))
     // Unexpected service destruction must first let an active recorder save.
     if (!shutdownStarted.get() && (UsbAudioBridge.isTransportOpen() || RecordingService.isAutomaticArmed() ||
-      RecordingService.isBusyForOwner())) beginShutdown()
+      RecordingService.isBusyForSystemOwner())) beginShutdown()
     if (activeService === this) activeService = null
     if (!shutdownStarted.get() || shutdownFinished) stopping = false
     super.onDestroy()

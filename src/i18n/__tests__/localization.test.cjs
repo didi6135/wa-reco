@@ -134,6 +134,38 @@ async function main() {
     core.activateLanguage('he'); assert.match(ui.render('SettingsScreen', recordingState, setupState), /שפת האפליקציה/);
   });
   const nativeModules = { CallRecorder: { getStatus: async () => ({ isRecording: true, source: 'usb', elapsedMs: 1234, level: 0.5, usbConnected: true, error: 'synthetic private error', errorCode: 'MIC_PERMISSION' }), startRecording: async () => { throw { code: 'FOREGROUND_REQUIRED', message: 'synthetic private error' }; }, getSystemAccessStatus: async () => ({ available: true, helperConnected: true, paired: true, error: null, pairingSetup: { active: true, error: 'synthetic private error', errorCode: 'PAIRING_BUSY' } }) } };
+  check('legacy experimental onboarding offers only explicit paired restoration', () => {
+    for (const language of ['he', 'en']) {
+      core.activateLanguage(language);
+      const experiment = { ...recordingState, deviceInfo: { sdk: 29 },
+        autoRecordingStatus: { mode: 'accessibilityMic', enabled: false, armed: false },
+        accessibilityMicStatus: { supported: true, selected: true, enabled: false, connected: false, automaticSupported: true },
+        systemAccessStatus: { available: false, helperConnected: false, paired: false, wirelessDebuggingEnabled: false, connecting: false } };
+      const setup = { ...setupState, supported: false, readiness: { ...setupState.readiness, mode: 'accessibilityMic',
+        captureReady: false, helper: false, automatic: false, allReady: false } };
+      const rendered = ui.render('SetupScreen', experiment, setup);
+      assert.ok(rendered.includes(core.t('pairedSetupRestoreHelp')));
+      assert.ok(rendered.includes(core.t('pairedSetupRestoreAction')));
+      assert.ok(!rendered.includes(core.t('cleanSettingsServiceApprovalHelp')));
+      assert.ok(!rendered.includes(core.t('cleanSetupChooseAction')));
+      assert.ok(!rendered.includes(core.t('copy372')));
+      assert.ok(!rendered.includes(core.t('copy112'))); assert.ok(!rendered.includes(core.t('copy116')));
+      const live = { ...experiment, isRecording: true, status: { ...recordingState.status, source: 'accessibilityMic', usbConnected: false } };
+      assert.ok(ui.render('HomeScreen', live, setup).includes(core.t('accessibilityMicLimits')));
+    }
+  });
+  check('experimental saved files are labeled and never imply verified remote speech', () => {
+    for (const language of ['he', 'en']) {
+      core.activateLanguage(language);
+      const recording = { ...recordingState, recordings: [{ ...recordingState.recordings[0], captureSource: 'accessibilityMic',
+        remoteAudioVerified: false, experimental: true, silencingKnown: false }] };
+      for (const screen of ['RecordingsScreen', 'PlaybackScreen']) {
+        const rendered = ui.render(screen, recording, setupState);
+        assert.ok(rendered.includes(core.t('accessibilityMicLabel')));
+        assert.ok(rendered.includes(core.t('accessibilityMicRecordingNote')));
+      }
+    }
+  });
   const recorder = {};
   const compiled = ts.transpileModule(fs.readFileSync(path.resolve(__dirname, '../../services/NativeRecorder.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
   vm.runInNewContext(compiled, { exports: recorder, module: { exports: recorder }, Error, require: name => {

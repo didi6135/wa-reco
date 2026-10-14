@@ -1,12 +1,12 @@
 {
-  "sourceCommit": "9c6137518aefde3e5f32c8b7500202645b50e5eb",
-  "fileCount": 296,
-  "excludedCount": 107,
+  "sourceCommit": "b9eb9b4e1f84936bac2d2542304dddad67eabc8c",
+  "fileCount": 370,
+  "excludedCount": 139,
   "files": [
     {
       "path": ".gitignore",
-      "bytes": 688,
-      "sha256": "98eb8e6b10a97b55eb87bc036c0ac5458ca40b034e928843dceb2eebb0e7ce14"
+      "bytes": 787,
+      "sha256": "c6117b332b49f3b6391dc7a240d1befcc8570937697f3f1b9d7fe21ccaa518c3"
     },
     {
       "path": "App.tsx",
@@ -85,8 +85,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 7151,
-      "sha256": "3cce589665a4db9dcf767b1dee224531d04c8a8e85f4143b89f4ee9741620c7a"
+      "bytes": 10284,
+      "sha256": "2a42f97913d8d0bb9c7ff4d5ce6c1ddff16465cee5189df433ab3ec2e3ea3ae2"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -101,7 +101,7 @@
     {
       "path": "android/app/build.gradle",
       "bytes": 11270,
-      "sha256": "51bcf27c89969a48d15a5b56f536c71cbdf203b88376dc7068b79751e82e4da4"
+      "sha256": "ea3c70a3734f64e5036854a0d38f21557150ae108d41dbdbac47de9ec082c045"
     },
     {
       "path": "android/app/debug.keystore",
@@ -120,8 +120,33 @@
     },
     {
       "path": "android/app/src/main/AndroidManifest.xml",
-      "bytes": 3799,
-      "sha256": "c45723c5609c8b3769fe1289a25b7aaf159e2d5d6444c1055dc0f7aaa0daad73"
+      "bytes": 4951,
+      "sha256": "129f3ed45a4c4dff2a459e04b2af97a88cc0f06f08af1a2d60f0493078b263f7"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicCallPolicy.kt",
+      "bytes": 4199,
+      "sha256": "e09d93c5bb698e669154d5cc915de9a746beae32793caea319d8f61371db8557"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicCapturePolicy.java",
+      "bytes": 1880,
+      "sha256": "36daa948c385da5e377d02ccc4f52c906c31b3eca55896b3260ed4d581d52526"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicController.kt",
+      "bytes": 2769,
+      "sha256": "bb21262f472acce0db87134d8e1997ff370efe02e54b952764b484e8fbf01bf4"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicRoute.java",
+      "bytes": 809,
+      "sha256": "7a33f7a619cf9cca7ef8461040d3af8b107a0bedef11c3527a0009b25cdf8a1c"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicService.kt",
+      "bytes": 1138,
+      "sha256": "3df393eb5ab9c56e2f363707644ad4ca469e5942174d48a503a6dca7e93f2f8e"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/AdbIdentityCertificate.java",
@@ -155,8 +180,8 @@
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/AutoRecordingController.kt",
-      "bytes": 25160,
-      "sha256": "61faa025fe1379abdc3946c54263ed3ac9818e7925c086a57b77f0239ccfebe7"
+      "bytes": 33428,
+      "sha256": "2b488c9bb3aa2032a4bd213361090f7077c67b75dafa51f32004a10062ce73be"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/BootstrapHandoffSignal.java",
@@ -180,8 +205,8 @@
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/CallRecorderModule.kt",
-      "bytes": 11419,
-      "sha256": "89c71e702bc875f2ad600367fbae66ce48a824ccd5767057786a0a8829d0f7e2"
+      "bytes": 21899,
+      "sha256": "8eb9b76d14029bd392292c826cb2c8764d5e8d434c340f3ead02e9334650f975"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/CallRecorderPackage.kt",
@@ -290,8 +315,8 @@
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/MainActivity.kt",
-      "bytes": 2203,
-      "sha256": "9b1bbf2417cb21f1067310d21c9189c050c5ee5a860c30eda9c713ecf07bd413"
+      "bytes": 2823,
+      "sha256": "60de45fdac14d07de83b5b22cd8c5f7eb36917fad1c0c8cad558dad1abb7380f"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/MainApplication.kt",
@@ -300,13 +325,48 @@
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/NativeWirelessAudioBridge.kt",
-      "bytes": 20477,
-      "sha256": "4047e278ad218fb4b67ed71c371d373616d8f99c13a45f3bea6d89ce466836db"
+      "bytes": 36778,
+      "sha256": "c126553a3d92b52143945a1fdacfb756db6435a141683aea2dc8d19b42c65701"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/NotificationActionPresence.java",
       "bytes": 718,
       "sha256": "b8a08ff2f8475ba32fa72c7308cb402be21597c1e93d543a512e003146e31f9b"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryAttempt.kt",
+      "bytes": 8659,
+      "sha256": "d3b476e57b1833c85ec3508b7a66ac0bbd803220b483510893d0092431a407e2"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryCommandFrame.java",
+      "bytes": 3938,
+      "sha256": "c00bcbfde3caf8083f87515ddce1756f74f69fcf45490bfdda259941510e8690"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryEntryGate.java",
+      "bytes": 2212,
+      "sha256": "c03157191304b8a9b77e94352edd25226e4791b04fb4f00230a57777cf99a325"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryLease.java",
+      "bytes": 690,
+      "sha256": "117b9e7800219f5fd75b764a4e6730b8b6a23fca45a9d928992f5355e7af7178"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryPolicy.java",
+      "bytes": 951,
+      "sha256": "2691a3f18aa241e9d2c167f25aca5150fccac813e8434ee89d037784fd6d377e"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoverySettings.java",
+      "bytes": 1294,
+      "sha256": "a1ea7c7e46aaf9bc32e3ca792b38b5db3599562e8fda66fb287f5b70d27e5e08"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryState.java",
+      "bytes": 2503,
+      "sha256": "602e2e76f11fb84f5b1522e8437ad2448f6df966423cc9e9649b92269fb5a005"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/PairingNotificationController.kt",
@@ -330,8 +390,8 @@
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/RecorderReadinessService.kt",
-      "bytes": 11208,
-      "sha256": "37be7fc7a3740f5720778586ac77dba8af5d4fac5510c22bab12eda47af02e76"
+      "bytes": 11238,
+      "sha256": "bb206a443ecfc426862ad95c3d1f0329fce02d09c316579f48f5d7bd653c59af"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/RecordingNames.java",
@@ -340,13 +400,33 @@
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/RecordingService.kt",
-      "bytes": 29527,
-      "sha256": "ad2445f7973a2013f81f0e92be6f9ea15482c569240b140d02412cc346a585f9"
+      "bytes": 35570,
+      "sha256": "ae1dd747ca077fc459b05c7271aa876303fee23b9f598c5b6cf791e6f3fd2ede"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/RecordingStore.kt",
-      "bytes": 7504,
-      "sha256": "d337bb81e9b3005a74f6fc420e72dec58e77151e057f2727153e6f3745204f57"
+      "bytes": 7691,
+      "sha256": "b15bf456399d5d7628dd30846f319839196668a76650ae1d0b91141096e46cd1"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/RestartReminderController.kt",
+      "bytes": 7890,
+      "sha256": "cd4b929c93d8dcb57bd522a725d2b4e5f05ccf4ebb577bc1f16839df4993f6d3"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/RestartReminderPolicy.java",
+      "bytes": 1332,
+      "sha256": "64ee8f58cbe2496474f79a94af2e4a17da9f1290329708743932d5c7c22d9480"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/RestartReminderReceiver.kt",
+      "bytes": 466,
+      "sha256": "8e4afe51dc7be64da154b1b877f88246f063a017ba985cccb7cc312f0ee65402"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/RestartResumeGate.java",
+      "bytes": 2122,
+      "sha256": "3acf181d9ead6d30ab9ea65f62f574957f875454985f8fbba99bc69443c8d0a4"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/TelegramBackupFailure.java",
@@ -405,8 +485,8 @@
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/UsbAudioBridge.kt",
-      "bytes": 12941,
-      "sha256": "ac396d3fb6758dd7a52c0c347375f86b14300cbf10194831580d24280d5f01c7"
+      "bytes": 13437,
+      "sha256": "0b34894a60ee9cec7de5baee0ad0bd483f642e339b4eedb62ad5affb1de699ca"
     },
     {
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/WavFile.kt",
@@ -417,6 +497,11 @@
       "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/WhatsAppCallNotificationService.kt",
       "bytes": 6765,
       "sha256": "7b8142178ccace92a397ae2ba3ee56300780111a2b04b652e7c76c5aa9bed88f"
+    },
+    {
+      "path": "android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/WirelessActivationFailure.java",
+      "bytes": 3920,
+      "sha256": "db74cf4eeba90ed80d4331f2875e1d15c93e833d384e4ca2649f6770c45c4eb3"
     },
     {
       "path": "android/app/src/main/res/drawable-hdpi/splashscreen_logo.png",
@@ -560,8 +645,8 @@
     },
     {
       "path": "android/app/src/main/res/values-he/strings.xml",
-      "bytes": 97,
-      "sha256": "f6e520a5fb5d47dd3252be9a4aae37a3e40ce3c3fafa10861588c1dbd893a537"
+      "bytes": 636,
+      "sha256": "40149caa173d89986d12709c99762f6c58aac24ef1ea97398a21869225da87b7"
     },
     {
       "path": "android/app/src/main/res/values-night/colors.xml",
@@ -575,13 +660,18 @@
     },
     {
       "path": "android/app/src/main/res/values/strings.xml",
-      "bytes": 335,
-      "sha256": "f6e85d0abecd6f1fc0586e8aef5d9b1848947aefd11b46a645981da8ccc2820e"
+      "bytes": 749,
+      "sha256": "24648b4aa88f1586ff13c7d4b739828d1d59cc86a2d929be5d82e9023c05abcc"
     },
     {
       "path": "android/app/src/main/res/values/styles.xml",
       "bytes": 929,
       "sha256": "7d2cd01b5ad5bc0660a6fab49699f08a08200388cf3af3fc189903f51874eb6d"
+    },
+    {
+      "path": "android/app/src/main/res/xml/accessibility_mic_service.xml",
+      "bytes": 317,
+      "sha256": "345dc8d2e7760a1f66784aeb4a6c4e490924589777e6b77015bc858be3ab8da5"
     },
     {
       "path": "android/app/src/main/res/xml/recording_paths.xml",
@@ -592,6 +682,26 @@
       "path": "android/app/src/release/res/values/strings.xml",
       "bytes": 89,
       "sha256": "efb259e137965b0510c9f656c584eccd77dc324d8ff33bc012d55ccd3402d2b2"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicAppInfoPolicyTest.java",
+      "bytes": 2539,
+      "sha256": "da42be8346da7ed129f072c3c7a8b5f6ca193c96cc50c3288d74a97a2e19a0b4"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicCallPolicyTest.kt",
+      "bytes": 7804,
+      "sha256": "2830ce1b45a4d39eb0f45c654e36458fbefb90ea0ff5cd55ab0291c105daaf19"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicCapturePolicyTest.java",
+      "bytes": 2983,
+      "sha256": "758893c6457310863a0b8e03a91bc50432a2f817f9dd15278771af1dd0a95932"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/AccessibilityMicRouteTest.java",
+      "bytes": 1098,
+      "sha256": "d3d36c43e4fad0bb31dcdcf0246070196203a0b3b0742cacf9889a3574c280c5"
     },
     {
       "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/AdbIdentityCertificateTest.java",
@@ -664,6 +774,26 @@
       "sha256": "8e707b73a7310eb582ede9569a7cbe6df91e572c64da53570fdd05013e6b6166"
     },
     {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryCommandFrameTest.java",
+      "bytes": 5169,
+      "sha256": "cf75402e8ebb205ec6bd6145a168aed8ca0b711bb1d39c7c0cc890eeca3a60dc"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryEntryGateTest.java",
+      "bytes": 4296,
+      "sha256": "e0ba4677c0bc902826d70c59e6fc07a1b8933d46e8ef11a86f227c4530170a52"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryPolicyTest.java",
+      "bytes": 4529,
+      "sha256": "429a397df3cfb7c0449e0198046661e60428469db1952c9753defe2bd0eb9843"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryResourcesTest.java",
+      "bytes": 3917,
+      "sha256": "bfdb82b5b2399706076e641d5f95b931f32e8dbf646edc0a6fc4596deeaeb3be"
+    },
+    {
       "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/PairingNotificationRulesTest.kt",
       "bytes": 2239,
       "sha256": "505efbc873602f45f8b841b2b0efe7a91e960885eb311a72e25d9a477c45fc16"
@@ -679,14 +809,34 @@
       "sha256": "06b2fe0a1488cb5b161a4a591e8682bde3659b116317a2bf6318962d998e5160"
     },
     {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/RestartReminderPolicyTest.java",
+      "bytes": 3715,
+      "sha256": "f5eb1b4c7f2f4a504a69bafe698340eb72578e9ace4ad08f91bbd0c9bf3327b7"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/RestartResumeGateTest.java",
+      "bytes": 6656,
+      "sha256": "6a2de409afb67e4a0c94cf67c1edcbf00659e35e00fac59f352fee0f5521427e"
+    },
+    {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/RestartResumeIntegrationContractTest.java",
+      "bytes": 5968,
+      "sha256": "9868e0e731b6d0f1e7b6e011b66c01fa6633b531cc2d8173c78791bd71e9927b"
+    },
+    {
       "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/ShellAudioCompatibilityNativeTest.kt",
       "bytes": 1087,
       "sha256": "d496d322f03a3b23d04f8fa0442874e60f7098e2f934267adcb3bc071db25a60"
     },
     {
+      "path": "android/app/src/test/java/com/didi4164/WhatsAppCallRecorder/WirelessActivationFailureTest.java",
+      "bytes": 2379,
+      "sha256": "77135e363e6ea77d596097fede4dec17d6bcdb924d7d4d41a0c704c5b63903c6"
+    },
+    {
       "path": "android/build.gradle",
-      "bytes": 2732,
-      "sha256": "d6195f78af80ae91d4e4327d1d2b472a6ee4ef2c2166687b02f9265a445971e7"
+      "bytes": 2737,
+      "sha256": "dc8f4080491150adfd411a26b1c8b9f967a9d5fc31380892fcdf6efe4f67b008"
     },
     {
       "path": "android/gradle.properties",
@@ -845,8 +995,8 @@
     },
     {
       "path": "app.json",
-      "bytes": 720,
-      "sha256": "7a71b020d055989e726b1b0f864134debe538d6fa036b13e605346eceb1fe1c1"
+      "bytes": 721,
+      "sha256": "8d8bd200a4c8416e48f85a962cfb293b240623373188547ca816aa2aad56c846"
     },
     {
       "path": "assets/adaptive-icon.png",
@@ -899,9 +1049,19 @@
       "sha256": "e0e4df8ffbc669bdd503f1b0b6494c8772fdbf20af6d7a98e8d2a859ee598484"
     },
     {
+      "path": "docs/android-device-compatibility.md",
+      "bytes": 9625,
+      "sha256": "db862dafcfff0d7886950c64eaf7fdd77e3418efd2d5b248986115fd0f6c82e3"
+    },
+    {
       "path": "docs/apk-redistribution.md",
       "bytes": 8059,
       "sha256": "2c66c9d2bd63720f74060efec981de15637551bc43f0fd4ad7b038a46ddf5908"
+    },
+    {
+      "path": "docs/clean-setup.md",
+      "bytes": 3487,
+      "sha256": "462683fe1aeb32452103b5921c555fb67d73c828a1b192a534e840966e517462"
     },
     {
       "path": "docs/drive-default-folder.md",
@@ -914,14 +1074,34 @@
       "sha256": "0d17d6251e02ec33eea271677d6d413b27a432444485010f5e5ed8e09bc7a77d"
     },
     {
+      "path": "docs/no-pairing-experiment.md",
+      "bytes": 2560,
+      "sha256": "5ba0f42e1d2ce90b0e2f34eed2eeeccc2a59a0fd1e67fd9e5a8e72af06147a06"
+    },
+    {
+      "path": "docs/offline-reboot-research.md",
+      "bytes": 13777,
+      "sha256": "59d29a8e1c95d780deb7ef36689cc6d858ddf63d5152ec72ac5eeb1d8d0aec17"
+    },
+    {
+      "path": "docs/offline-recovery-setup.md",
+      "bytes": 8002,
+      "sha256": "442f36616364217ecf455175a6f65874b971219d577dc43e125b8af74377a9d6"
+    },
+    {
       "path": "docs/privacy.md",
-      "bytes": 5152,
-      "sha256": "44a6d780ec94e04005384404b25cad491f014b2cefdae7e522542f7578c58bf5"
+      "bytes": 7422,
+      "sha256": "741f89cc09860eca1850d14eacb2d80778dedf37ac759f1a4be21629b27a42ff"
     },
     {
       "path": "docs/rebuild-spake2.md",
       "bytes": 5974,
       "sha256": "70a70cebbd602c92728627bcee4ff511c44855b3c34d554721652ccfa5b9868c"
+    },
+    {
+      "path": "docs/repository-history.md",
+      "bytes": 1626,
+      "sha256": "b37f25f0418f5d51eb71f79fd40bfe67df54082dfa62c2ab53d1971e82d04dff"
     },
     {
       "path": "docs/signing.properties.example",
@@ -934,24 +1114,34 @@
       "sha256": "1cea294418621f30f7a144558d2764c0725331c3dee565a13f95db6ddb183117"
     },
     {
+      "path": "docs/validation/android-matrix-2026-10-07.json",
+      "bytes": 7385,
+      "sha256": "80ba1bc916100fe524cc34d0e972c9669e3fb4b4d5b4560729eef5fffec264e6"
+    },
+    {
       "path": "index.ts",
       "bytes": 346,
       "sha256": "de6376c682aa67fba59fbba41a568e6a3a3f8c9a32da184825d89995ab559fe2"
     },
     {
       "path": "package-lock.json",
-      "bytes": 434438,
-      "sha256": "61e9ae05d49a2fcb810381cf7282641172c0ff49674d3ef708ab6a7f62dbd615"
+      "bytes": 434440,
+      "sha256": "fe04d9ddc578a60d830a7b575992a234d9b24e1f5d697e1b295429f2966ae519"
     },
     {
       "path": "package.json",
-      "bytes": 1417,
-      "sha256": "d9c4a8b654f5c59366fc59121cadd70070d37403c4d2ac7d3198dd45db54703f"
+      "bytes": 1418,
+      "sha256": "36417730bd33336dfed1070f6e161cfe2df6457e222a85c25c09a20fe68f86fb"
+    },
+    {
+      "path": "src/components/AccessibilityMicCard.tsx",
+      "bytes": 7734,
+      "sha256": "1e220311cf46ad0282ea3496b2118ad35cf0dd22bcdc8f0b3877336a9c0a3401"
     },
     {
       "path": "src/components/AutoRecordingCard.tsx",
-      "bytes": 5552,
-      "sha256": "8b7e2432f33b6cf193d6e2930482f9bccf999fe15cc8021b7014d6c4b653a8c1"
+      "bytes": 8004,
+      "sha256": "665317972f09ef4f51a8ab9090e61f58a218966722b29a6e2c24c66e0a08b7a0"
     },
     {
       "path": "src/components/CallNameCard.tsx",
@@ -964,14 +1154,19 @@
       "sha256": "63e06654c9defa9d25c6cfe3ab56124aad923b9cd4db4b3aa98dd2f9ff969c54"
     },
     {
+      "path": "src/components/OfflineRecoveryCard.tsx",
+      "bytes": 10139,
+      "sha256": "71c3b35049d5ce7d1521b6e0af7b00db8910929b93f2321e29ce57a7d3c9515f"
+    },
+    {
       "path": "src/components/RecordButton.tsx",
       "bytes": 1603,
       "sha256": "9698c28c23da348cfbc615eab181b5a1119be9a2e96597bb51365b80121df19a"
     },
     {
       "path": "src/components/SystemSetupWizard.tsx",
-      "bytes": 19874,
-      "sha256": "e5530edb97789e60f1827b40e6682d235510370b9bf02d5a6dca95aec442efe6"
+      "bytes": 20965,
+      "sha256": "5d788caeccbe8426402663d68dfa1166c1daf2599cdc08932caeb6b466d94b01"
     },
     {
       "path": "src/components/TelegramBackupCard.tsx",
@@ -984,14 +1179,44 @@
       "sha256": "2aad0e04ea4529f8af91b140066aaffc94be6d1f51c6fcbc6dd7a8c22da66c63"
     },
     {
+      "path": "src/components/__tests__/accessibility-mic.test.cjs",
+      "bytes": 40471,
+      "sha256": "b6531e8515a86f355866c39da01b7d52e54b0c2ae2972234c3c0fae91a74c511"
+    },
+    {
+      "path": "src/components/__tests__/clean-settings.test.cjs",
+      "bytes": 17923,
+      "sha256": "998e708bdc91823c2b628f757c1edd95a569de7b9fe2d8fc535fa523956f9525"
+    },
+    {
+      "path": "src/components/__tests__/offline-recovery.test.cjs",
+      "bytes": 25239,
+      "sha256": "9a1c678c7d6792663d959ed7e07ff1e47c99d202191866307a5b716c86234653"
+    },
+    {
+      "path": "src/components/__tests__/paired-home.test.cjs",
+      "bytes": 13372,
+      "sha256": "b622a3c7ccb5bd103ae117a23b9848bef22c3256916604aecf0f1c9aa45cd992"
+    },
+    {
       "path": "src/context/RecordingContext.tsx",
-      "bytes": 19730,
-      "sha256": "f01c7e3f8f14b2292e54d3ded2101158812f36321c4b0550f442531eae91ec49"
+      "bytes": 32525,
+      "sha256": "28f34e6e2b78823f3bafb14047d295efe9c2a405b00e60fd74640db4d461a211"
+    },
+    {
+      "path": "src/hooks/__tests__/restart-resume.test.cjs",
+      "bytes": 18562,
+      "sha256": "1511be9051ca54fca9b0b7f873c7b6db25e502a1d824cc8e13414650a2748208"
     },
     {
       "path": "src/hooks/useDriveBackup.ts",
       "bytes": 4150,
       "sha256": "615017074ec208ccec3e74a8a396bd0a01ba9be2b5fa0db2a98dd7948c5a99a8"
+    },
+    {
+      "path": "src/hooks/useRestartResume.ts",
+      "bytes": 2577,
+      "sha256": "8d6afc45a5feeeba5c3d5c136e5b0623a0329846446fc0da014c2ffb58422c0a"
     },
     {
       "path": "src/hooks/useTelegramBackup.ts",
@@ -1010,18 +1235,18 @@
     },
     {
       "path": "src/i18n/__tests__/localization.test.cjs",
-      "bytes": 18690,
-      "sha256": "142d9d66b699d6082fdb01494f730b4cb6a921256efd27965b6574e5eb97c5da"
+      "bytes": 28379,
+      "sha256": "e76b619cd37496e84d5480f2b26e46dde56f5c33cdaaa69f79d328b38c7b74ed"
     },
     {
       "path": "src/i18n/__tests__/render-ui.cjs",
-      "bytes": 4712,
-      "sha256": "a558d6d8a0bb0dea0f6fe4f858f4866bda97e3896867371948da0570ff257bed"
+      "bytes": 4931,
+      "sha256": "a134b781f6ab7a2a0abf42d38ed3c49fddaaab12c563ed184a25b31ded936c5b"
     },
     {
       "path": "src/i18n/catalog.ts",
-      "bytes": 71004,
-      "sha256": "118203e9622edf48fa9414805d249c5f8692125b631d375d4ed088af8abd93ff"
+      "bytes": 110007,
+      "sha256": "b7cac94c38fcc1f86eae0c2ffe228f0dc1fc4e46a8483619481e0de5daca3eb4"
     },
     {
       "path": "src/i18n/core.ts",
@@ -1040,33 +1265,38 @@
     },
     {
       "path": "src/navigation/AppNavigator.tsx",
-      "bytes": 2817,
-      "sha256": "1fda2bf9a72215cbcc0fab17047ee117bce3b02058ebf10800bae9e96cad05d3"
+      "bytes": 3444,
+      "sha256": "ce40f05d213d4138584a85fb2d0a610fd2e18d44e0ebe98a84bda36e58584e78"
+    },
+    {
+      "path": "src/navigation/__tests__/paired-initial-route.test.cjs",
+      "bytes": 4619,
+      "sha256": "b10b43c2476f83719635ef4b6e1e3f6d1b7a4e83bf8677d0585920a7cf710c32"
     },
     {
       "path": "src/screens/HomeScreen.tsx",
-      "bytes": 9736,
-      "sha256": "0bd0d0ca60be4f85fa7d3f40ff7ea7061691e226c9f4ee27761541cec786f7de"
+      "bytes": 13560,
+      "sha256": "989d026f46f57b2263c1d5e923f3dc446f78f12e820f4c203f88353bb364db7f"
     },
     {
       "path": "src/screens/PlaybackScreen.tsx",
-      "bytes": 9327,
-      "sha256": "7d04bafc06e7428ec00d5fb0f514e686df37af8082a3cf7a59a4c6136d7e3381"
+      "bytes": 9538,
+      "sha256": "04ad7709478f61f10bce388f0f0c07ad85a801329e921a0ce49ee6077a72ce16"
     },
     {
       "path": "src/screens/RecordingsScreen.tsx",
-      "bytes": 8066,
-      "sha256": "d18c92dd072216a2050eb1a8cf8933df47f51d3431ec8f18f046be7ceb9e6caa"
+      "bytes": 8225,
+      "sha256": "283949df3041d5be7f1f3b28013afff89347faa5a3db8f5fd8f4c67d951a553d"
     },
     {
       "path": "src/screens/SettingsScreen.tsx",
-      "bytes": 8909,
-      "sha256": "2282a6245e40600039fb2adfa98499958247ab8ae5d473dae374508dae1d8714"
+      "bytes": 11447,
+      "sha256": "d401bb610d03f44201f5b1b75b13dc5accbe4a1930d1cc6483dc4b853e30d7f5"
     },
     {
       "path": "src/screens/SetupScreen.tsx",
-      "bytes": 11902,
-      "sha256": "ac0e866f87c8f498090a3fe9838dd3cef6f2ae56984ac6995acacef4278b25fe"
+      "bytes": 15824,
+      "sha256": "5382163824e3b225aace971c21d5ec6fd0260a36cb4d4db9fe9d7157c3e39e70"
     },
     {
       "path": "src/services/NativeDriveBackup.ts",
@@ -1075,8 +1305,8 @@
     },
     {
       "path": "src/services/NativeRecorder.ts",
-      "bytes": 9111,
-      "sha256": "64b59907a2522a33375345c1972bb22c1af7cd56e1f74b6a4a2f6c30e748e1a5"
+      "bytes": 18465,
+      "sha256": "c98532f4a431e301aa5c2624196cb1161fa7c3708bf58e20dd61e21c27d36942"
     },
     {
       "path": "src/services/NativeTelegramBackup.ts",
@@ -1085,18 +1315,33 @@
     },
     {
       "path": "src/setup/SetupContext.tsx",
-      "bytes": 6438,
-      "sha256": "733a4a4786a135d940029a48d5cabdd2ace4dbacf845687fc1b646002986a3bf"
+      "bytes": 6821,
+      "sha256": "6106c803246714515997ded1f2f450a41366c486f7ed3c3d622e5b0d4c85f8eb"
+    },
+    {
+      "path": "src/setup/__tests__/clean-setup.test.cjs",
+      "bytes": 21383,
+      "sha256": "54999666efd4cf69ab12d7155c64a2277accaec58707289051e7d5e42f0d1f2f"
+    },
+    {
+      "path": "src/setup/__tests__/connection-flow.test.cjs",
+      "bytes": 2931,
+      "sha256": "0498575ed9e8d12a8a395fbbcd94c7de66a1dc19fae832e7888586455ae5ea0d"
     },
     {
       "path": "src/setup/__tests__/readiness.test.cjs",
-      "bytes": 5602,
-      "sha256": "158a39716572979c5123e29ac4891ff4b70cc333c788841ad14aab98e2de035d"
+      "bytes": 9729,
+      "sha256": "5963d21f6fef1cb2d63d92fa21583eb50de4983d7d92f1bdd4171e048ff02173"
+    },
+    {
+      "path": "src/setup/connectionFlow.ts",
+      "bytes": 1388,
+      "sha256": "310dd073e498c7bcd3e62437e5b8bbc4b183fb0293840a9abc7768784eed4316"
     },
     {
       "path": "src/setup/readiness.ts",
-      "bytes": 2971,
-      "sha256": "2d5634f68c5bf2d57fe5d4be389da7ed4479a936e492cd33b7bbc66dae6853a2"
+      "bytes": 4690,
+      "sha256": "c8292bc816f44d6ab1859fb6cca6a4c4035f8c81d7614e55ba3e1c136e7d08b6"
     },
     {
       "path": "src/theme/index.ts",
@@ -1107,6 +1352,46 @@
       "path": "src/utils/permissions.ts",
       "bytes": 1703,
       "sha256": "08a779f4a9943f31ce678e9d99c63a4a9ef280c84963e3ad3100d59a1ae9cd31"
+    },
+    {
+      "path": "tools/android-device-matrix/README.md",
+      "bytes": 5656,
+      "sha256": "f794fbcc1723d4f40a70e48e7053cef9267ced435c92600c5eefee30096b265d"
+    },
+    {
+      "path": "tools/android-device-matrix/build-probe.ps1",
+      "bytes": 4002,
+      "sha256": "73333a5888a2ea20b6f656a390394a8fc570272babd8896e2e14b7b51b72e43f"
+    },
+    {
+      "path": "tools/android-device-matrix/prepare-owned-avd.py",
+      "bytes": 5571,
+      "sha256": "1dd9a1d2e4c2f7026107cfa3bbd2b97218f9daf8fdb29767caa84b42750fda43"
+    },
+    {
+      "path": "tools/android-device-matrix/provision-sparse-image.py",
+      "bytes": 7990,
+      "sha256": "e38a49054824874a9781e6a7dce93668565680afc10b6c2b11eaac09cf29d7db"
+    },
+    {
+      "path": "tools/android-device-matrix/run-metadata-probe.py",
+      "bytes": 2763,
+      "sha256": "8237eb9379103b6fd951ef851511ffb1dbacdf5d9ed0b222c7059b8975ea7598"
+    },
+    {
+      "path": "tools/android-device-matrix/run-probe.py",
+      "bytes": 10234,
+      "sha256": "64ca11da2a10985180fe5f8defed552ead7e2ffa7196d9591bf2faf5359cc302"
+    },
+    {
+      "path": "tools/android-device-matrix/src/com/codaki/usbaudio/RuntimeAudioProbe.java",
+      "bytes": 11172,
+      "sha256": "8a2415cff692113a924be2fe7512f2dbce18bab92fcbd3006561d780e0948648"
+    },
+    {
+      "path": "tools/build-android.ps1",
+      "bytes": 4793,
+      "sha256": "375460224c15fbab954ea1001a9108eff152e564ccd0b0544068ad37915bf45c"
     },
     {
       "path": "tools/drive-backup-tests/DriveBackupPolicyTest.java",
@@ -1155,13 +1440,18 @@
     },
     {
       "path": "tools/export-public-source.py",
-      "bytes": 5799,
-      "sha256": "9cae47c98b91ec4fab110b06819d5162dda219847650e4b7278da163cb31238c"
+      "bytes": 5903,
+      "sha256": "ade24f9302ba251ec4bb77a04e1e3acdf84c39b48dc5e8844c33297ecbdae5f4"
     },
     {
       "path": "tools/public-source-tests/test_export.py",
-      "bytes": 2627,
-      "sha256": "a52478755adf82916c9c63da2bc8a32355e2adafca9a1c214b8e12bda4e393c7"
+      "bytes": 3232,
+      "sha256": "1eceb9b80a20053af905b50ab30e058942a0732c9a33a88d3be79a02d479e66a"
+    },
+    {
+      "path": "tools/release-compliance/README.md",
+      "bytes": 14945,
+      "sha256": "72254fd5692385b9d4fb3fb92df7fd28321f4cf72b6cd46bb31e1d53d3b2aba3"
     },
     {
       "path": "tools/release-compliance/notice-origins.json",
@@ -1174,9 +1464,19 @@
       "sha256": "707147629d28d510feb43bad71fee9b5dd7ca532c2a8cd7e955d46fb797227f7"
     },
     {
+      "path": "tools/release-compliance/release.py",
+      "bytes": 99197,
+      "sha256": "9169e12926db8954cd16e33b3a5905fcbea40d782deeb835e9d29cc76c15d9df"
+    },
+    {
       "path": "tools/release-compliance/release_bundle.py",
       "bytes": 26252,
       "sha256": "dca900a3f2c4f2a137412b1706c45eca6fcdabad617b6584b82df1ab78efa7c9"
+    },
+    {
+      "path": "tools/release-compliance/test_release.py",
+      "bytes": 72480,
+      "sha256": "66c8453ae00e1d9c1e8f11fe12dbebcdeb5f46599cb3d98bae08c72203ec3eba"
     },
     {
       "path": "tools/release-compliance/test_release_bundle.py",
@@ -1219,9 +1519,19 @@
       "sha256": "cd59bc9ba96e304b51be525b0a3b446ed3fc208a4fb6a53bcca4fc4c718c9cff"
     },
     {
+      "path": "tools/test-telegram-ui.cjs",
+      "bytes": 19509,
+      "sha256": "0f1eae16000df7eaab18663e6b88eb1d8be57bbd936597f937698f8b55c31cb4"
+    },
+    {
       "path": "tools/ui-preview/README.md",
-      "bytes": 2179,
-      "sha256": "5cabc91d08761bb4ae1d31f56b8f703b03271b9fb4efa907986c3bbecac5bcfb"
+      "bytes": 3190,
+      "sha256": "60a79bdde3984786dcc2e54151dfddc51648eeb36b88f96494f36bbba3e5e4ae"
+    },
+    {
+      "path": "tools/ui-preview/capture-current.py",
+      "bytes": 4639,
+      "sha256": "97db2177308b6555e6779ee8a08c8c5c1aa0cf0ca57667a96b8b95c811d76488"
     },
     {
       "path": "tools/ui-preview/capture.py",
@@ -1237,6 +1547,11 @@
       "path": "tools/ui-preview/preview.css",
       "bytes": 6647,
       "sha256": "59a6bf52062ee550b09fb20217dfbc233a8bed563ca96c313eeef3cbc9851db5"
+    },
+    {
+      "path": "tools/ui-preview/render-current.cjs",
+      "bytes": 16999,
+      "sha256": "26224b4ee81d488defa0e962313483c6820c89b4cff644df914517e958b89687"
     },
     {
       "path": "tools/ui-preview/review.css",
@@ -1450,38 +1765,93 @@
     },
     {
       "path": "website/README.md",
-      "bytes": 3937,
-      "sha256": "1d3d35dcd89284d8e4dd2028be8012afa2ecff1bd75e8168fd120e2723fa4ac4"
+      "bytes": 5650,
+      "sha256": "73b6ac46c6956b9f65c2e353d5271e09f06ff10485674640d4a8d070794aefe2"
+    },
+    {
+      "path": "website/SOURCE_PROVENANCE.json",
+      "bytes": 4506,
+      "sha256": "46fa8ac85328c80f8dd5e2a4e8425207d737640bddb6406f4cddf2fd1119f927"
     },
     {
       "path": "website/check_site.py",
-      "bytes": 18750,
-      "sha256": "2869b2e2ecad741bd8a020db8a1f42cc01a131eb92c20803bd5e05247a40ce2e"
+      "bytes": 29468,
+      "sha256": "ddde2d6383bcc5de609ce707a845fd4dbe4ede4d3d7a235638c91a920c8eaed0"
     },
     {
       "path": "website/dist/app.js",
-      "bytes": 27187,
-      "sha256": "f7d3287905499483a357c43a5b110f91f96d9f85955848dad350071d9c419d14"
+      "bytes": 39782,
+      "sha256": "dc8eabf70f55818fc9e66ab5f18d5df4a5792f39e1ee0520ac00afd85bdca3fa"
+    },
+    {
+      "path": "website/dist/assets/Assistant-OFL.txt",
+      "bytes": 4612,
+      "sha256": "628a624ceabe269a93b1f13086ada08064b8caa3fb08d6c21e13f69d0cdbf983"
+    },
+    {
+      "path": "website/dist/assets/Inter-OFL.txt",
+      "bytes": 4380,
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "path": "website/dist/assets/assistant-hebrew-variable.woff2",
+      "bytes": 7312,
+      "sha256": "f9805e7a16e108bcf6701e6a623fcf560bff3f28522fa94d310e833b3bd60400"
+    },
+    {
+      "path": "website/dist/assets/fonts-notice.txt",
+      "bytes": 1055,
+      "sha256": "6b6a7717e8e95cff6b50e02069e1e6a52e1bf5bc7a41e0ecf404d236954548ef"
+    },
+    {
+      "path": "website/dist/assets/inter-latin-variable.woff2",
+      "bytes": 48256,
+      "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
     },
     {
       "path": "website/dist/assets/mark.svg",
-      "bytes": 502,
-      "sha256": "6cd251664f5cf1339940722cd0775390ed79a9fd965aa7243b3c972872376a3a"
+      "bytes": 511,
+      "sha256": "3c010862368db40a34bc784eece084a098604f0d53ce6fc4f9cfc53bcd364cf8"
+    },
+    {
+      "path": "website/dist/codaki.css",
+      "bytes": 19716,
+      "sha256": "97cca44b523b3e462e36b897a726d67930599de41e7302c0153565c86b524e8c"
     },
     {
       "path": "website/dist/index.html",
-      "bytes": 16293,
-      "sha256": "34c80554fd754b3bd7d4a0d01cabbc6d041f2eda4fc4ba8f0db0104795af77c4"
+      "bytes": 27437,
+      "sha256": "c7e22d3aac39d52b4a0227592a1d148e61a7e062f649699e08946a15a5dd1f21"
+    },
+    {
+      "path": "website/dist/policy.css",
+      "bytes": 4489,
+      "sha256": "91946cb927a933ef6084045e8cd0fda7544160ed760e8ecfc7fdcd3e8b283bf6"
+    },
+    {
+      "path": "website/dist/policy.js",
+      "bytes": 24309,
+      "sha256": "467835712b412f06648800208d66581a8a9c12d375153151b9ff5b460f233a30"
+    },
+    {
+      "path": "website/dist/privacy.html",
+      "bytes": 11295,
+      "sha256": "e28a0e8b32c3d368018e0511f6dda3faf07151a1f7d50b9af8c51f46fc8e92e6"
     },
     {
       "path": "website/dist/release-metadata.json",
-      "bytes": 714,
-      "sha256": "c9893e39252c53ef106c3baaac62db6de42bf06c0df3da40664572b0241682d0"
+      "bytes": 1032,
+      "sha256": "298d7477739d7a571205fb7d8de76724112e3f99042ba116e579f46f8ca33da2"
     },
     {
       "path": "website/dist/styles.css",
-      "bytes": 15565,
-      "sha256": "e160c3beb6e49d0a176cd739352f7e7b0b0005951c47a24024a8e53683ce1fd2"
+      "bytes": 34195,
+      "sha256": "566608d19e1049c693b68a0c1b5589c9a7df6ce1a61cf5e2a13c9bdf48c9f9ee"
+    },
+    {
+      "path": "website/dist/terms.html",
+      "bytes": 8167,
+      "sha256": "86bd096f507bebbed101441e0e344ec84b1f5483dfdd27948d49fdbece6519f0"
     }
   ]
 }

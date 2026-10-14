@@ -1,3 +1,5 @@
 <resources>
+  <string name="accessibility_mic_label">wa-reco שיתוף מיקרופון ניסיוני</string>
+  <string name="accessibility_mic_description">שיתוף מיקרופון אופציונלי במהלך שיחות. השירות אינו קורא מסכים, הודעות או אירועי נגישות ואינו לוחץ על כפתורים. הפעלתו אינה מתחילה הקלטה. שמיעת הצד השני ותמיכה באוזניות תלויות בטלפון; יש להפעיל הקלטה בנפרד ב־wa-reco.</string>
   <string name="call_detection">זיהוי שיחות WhatsApp</string>
 </resources>

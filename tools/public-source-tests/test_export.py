@@ -31,7 +31,10 @@ class PublicSourceChecks(unittest.TestCase):
                      'docs/signing.properties.example', 'android/app/debug.keystore',
                      'tools/android-device-matrix/run-probe.py',
                      'tools/android-device-matrix/README.md',
-                     'tools/android-device-matrix/src/com/codaki/usbaudio/RuntimeAudioProbe.java']:
+                     'tools/android-device-matrix/src/com/codaki/usbaudio/RuntimeAudioProbe.java',
+                     'tools/build-android.ps1', 'tools/test-telegram-ui.cjs',
+                     'android/app/src/main/java/com/didi4164/WhatsAppCallRecorder/OfflineRecoveryPolicy.java',
+                     'docs/offline-recovery-setup.md']:
             with self.subTest(name=name):
                 self.assertTrue(module.included(name))
 

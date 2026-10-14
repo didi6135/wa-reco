@@ -6,6 +6,9 @@ node_modules/
 # Expo
 .expo/
 dist/
+# The buildless website's dist directory contains reviewed source.
+!website/dist/
+!website/dist/**
 web-build/
 expo-env.d.ts
 

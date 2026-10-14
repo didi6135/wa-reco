@@ -22,7 +22,10 @@ PREFIXES = (
     'tools/telegram-backup-tests/',
     'tools/telegram-backup-tests/', 'website/',
 )
-TOOL_FILES = {'tools/export-public-source.py', 'tools/test-drive-ui.cjs'}
+TOOL_FILES = {
+    'tools/export-public-source.py', 'tools/test-drive-ui.cjs',
+    'tools/test-telegram-ui.cjs', 'tools/build-android.ps1',
+}
 PRIVATE_PARTS = {
     '.git', '.planning', 'artifacts', 'node_modules', '.gradle', '.cxx',
     '.idea', 'build', '__pycache__', '.expo', '.kotlin', '.openai',

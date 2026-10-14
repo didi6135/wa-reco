@@ -21,7 +21,7 @@ const qualityWarning = (recording: Recording): string | null => {
     if (micMissing) return t('copy280');
   }
   switch (recording.status) {
-    case 'captured': return recording.wasSilenced ? t('copy281') : null;
+    case 'captured': return recording.wasSilenced ? t('copy281') : recording.captureSource === 'accessibilityMic' ? t('accessibilityMicRecordingNote') : null;
     case 'silent': return t('copy282');
     case 'interrupted': return t('copy283');
     case 'recovered': return t('copy284');
@@ -70,7 +70,7 @@ export default function RecordingsScreen() {
         <TouchableOpacity style={styles.info} onPress={() => navigation.navigate('Playback', { recordingId: item.id })} accessibilityRole="button" accessibilityLabel={t('copy290', { p0: displayRecordingTitle(item.title, item.callDisplayName) })}>
           <Text style={styles.title}>{displayRecordingTitle(item.title, item.callDisplayName)}</Text>
           <Text style={styles.date}>{formatDate(item.date)}</Text>
-          <Text style={styles.details}>{item.durationMs !== undefined ? formatDuration(item.durationMs) : item.duration} · {item.source === 'legacy' ? t('copy291') : item.captureSource === 'usb' ? t('copy246') : t('copy245')}</Text>
+          <Text style={styles.details}>{item.durationMs !== undefined ? formatDuration(item.durationMs) : item.duration} · {item.source === 'legacy' ? t('copy291') : item.captureSource === 'accessibilityMic' ? t('accessibilityMicLabel') : item.captureSource === 'usb' ? t('copy246') : t('copy245')}</Text>
           {warning && <Text style={styles.warning}>{warning}</Text>}
         </TouchableOpacity>
         <View style={styles.actions}>

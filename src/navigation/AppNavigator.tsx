@@ -1,6 +1,6 @@
 import { t, useLocalization, useLocalizedStyles } from '../i18n';
-import React from 'react';
-import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import React, { useCallback, useRef, useState } from 'react';
+import { createNavigationContainerRef, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
@@ -10,6 +10,8 @@ import SettingsScreen from '../screens/SettingsScreen';
 import { colors } from '../theme';
 import SetupScreen from '../screens/SetupScreen';
 import { useSetup } from '../setup/SetupContext';
+import { setupInitialRoute } from '../setup/connectionFlow';
+import { useRestartResume } from '../hooks/useRestartResume';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -24,12 +26,18 @@ const Stack = createStackNavigator<RootStackParamList>();
 export default function AppNavigator() {
   const styles = useLocalizedStyles(baseStyles);
   const { isRTL } = useLocalization();
-  const { loading, completed } = useSetup();
+  const { loading, completed, readiness } = useSetup();
+  const navigation = useRef(createNavigationContainerRef<RootStackParamList>());
+  const [navigationReady, setNavigationReady] = useState(false);
+  const openRestartSetup = useCallback(() => {
+    if (navigation.current.isReady()) navigation.current.navigate('Setup');
+  }, []);
+  useRestartResume(!loading && navigationReady, openRestartSetup);
   if (loading) return <View style={styles.loading}><ActivityIndicator color={colors.green} /><Text style={styles.loadingText}>{t('copy215')}</Text></View>;
   return (
-    <NavigationContainer direction={isRTL ? 'rtl' : 'ltr'} theme={{ ...DefaultTheme, colors: { ...DefaultTheme.colors, primary: colors.green, background: colors.background, card: colors.background, text: colors.ink, border: colors.border, notification: colors.danger } }}>
+    <NavigationContainer ref={navigation.current} onReady={() => setNavigationReady(true)} direction={isRTL ? 'rtl' : 'ltr'} theme={{ ...DefaultTheme, colors: { ...DefaultTheme.colors, primary: colors.green, background: colors.background, card: colors.background, text: colors.ink, border: colors.border, notification: colors.danger } }}>
       <Stack.Navigator
-        initialRouteName={completed ? 'Home' : 'Setup'}
+        initialRouteName={setupInitialRoute(completed, readiness.mode)}
         screenOptions={{
           headerStyle: { backgroundColor: colors.background, elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 },
           headerTintColor: colors.ink,
