@@ -2,7 +2,7 @@
 
 Buildless Hebrew/English site for `https://wa-reco.codaki.com/`. Serve `dist/` directly; no package installation or build step is needed. Site registration, access, deployment, and the signed public APK are managed separately by the release owner. Local source or working DNS does not establish a public deployment.
 
-The owner approved the Codaki-style white/blue design and public audience on2026-10-07. Site source31a94c5471486a0811869b74dd904b1c67d3d1f5 is deployed as version3 at the URL above. All15 public static files match that source;593 local browser checks and74 anonymous live checks passed. The APK/source/notices links stay bound to the independently verified1.5.4 release. Local Inter/Assistant assets retain their OFL licenses and attribution in `dist/assets/fonts-notice.txt`.
+The existing white/blue design and public audience are retained. On 2026-10-14 the owner authorized publication of 1.5.12. Site source `c8c5a7f74027aff252bb1c6a1e5fbaeec04be2f1` updates the three download links, repository name and bilingual reboot/local-recovery guidance. All 593 local browser checks passed. The APK and source/notices remain the exact previously verified release bytes. Local Inter/Assistant assets retain their OFL licenses and attribution in `dist/assets/fonts-notice.txt`.
 
 ## Local preview
 
@@ -17,7 +17,7 @@ Open `http://127.0.0.1:8768/`. The language preference is saved locally and shar
 Run the existing Python Playwright installation without adding dependencies:
 
 ```powershell
-python website/check_site.py --url http://127.0.0.1:8768/ --output artifacts/website
+python website/check_site.py --url http://127.0.0.1:8768/ --output artifacts/website --browser-channel chrome
 ```
 
 ## Public download metadata
@@ -28,10 +28,10 @@ The release owner updates `dist/release-metadata.json` when a release is publish
 {
   "status": "ready",
   "url": "https://example.com/releases/wa-reco.apk",
-  "version": "1.5.4",
+  "version": "1.5.12",
   "sizeBytes": 12345678,
   "sha256": "<exact 64-character hexadecimal SHA-256>",
-  "filename": "wa-reco-1.5.4.apk",
+  "filename": "wa-reco.apk",
   "companion": {
     "url": "https://example.com/releases/wa-reco-source-and-notices.zip",
     "filename": "wa-reco-source-and-notices.zip",
@@ -44,7 +44,7 @@ The release owner updates `dist/release-metadata.json` when a release is publish
     "sizeBytes": 1234567,
     "sha256": "<exact 64-character hexadecimal ZIP SHA-256>"
   },
-  "sourceUrl": "https://github.com/didi6135/WhatsAppCallRecorder/tree/<exact 40-character public source commit>"
+  "sourceUrl": "https://github.com/didi6135/wa-reco/tree/<exact 40-character public source commit>"
 }
 ```
 
@@ -52,7 +52,7 @@ The example is a schema illustration, not release evidence. The page requires bo
 
 The optional `applicationSource` object exposes the exact application source ZIP in addition to the companion. It uses the same ZIP validation; if present but invalid, all release downloads remain disabled. The companion includes source, license notices and modification/relinking instructions and remains required.
 
-The browser checker checks actual served1.5.4 metadata against the displayed URLs, filenames, version, sizes, checksums and exact source commit, then isolates invalid/pending/network fixtures. It checks both languages, keyboard interactions, five widths, enlarged fonts, persistent policy navigation and no-JavaScript/storage fallback. These DOM checks do not download or verify APK/ZIP bytes; full published-byte verification is release-owner evidence.
+The browser checker checks actual served 1.5.12 metadata against independently pinned URLs, filenames, version, sizes, checksums and exact source commit, then isolates invalid/pending/network fixtures. It checks both languages, keyboard interactions, five widths, enlarged fonts, persistent policy navigation and no-JavaScript/storage fallback. These DOM checks do not download or verify APK/ZIP bytes; full published-byte verification is release-owner evidence. Use `--browser-channel chrome` or `msedge` to use an installed browser when Playwright's bundled browser is unavailable.
 
 ## Claim boundaries
 
@@ -61,7 +61,7 @@ The browser checker checks actual served1.5.4 metadata against the displayed URL
 - Android 14 / 15: experimental, requires device and audio verification.
 - Android 13 and earlier: microphone only; no supported both-party same-device WhatsApp route.
 - iPhone: this app provides no same-phone WhatsApp call recording.
-- Initial helper activation needs Wi-Fi and Wireless debugging. An activated detached helper can continue without Wi-Fi; reboot or helper loss requires reactivation. WhatsApp still needs Internet.
+- Initial helper activation needs Wi-Fi and Wireless debugging. An activated detached helper can continue without Wi-Fi; reboot or helper loss requires foreground reactivation before the call. Optional prepared local recovery is experimental and needs the Wi-Fi radio, but no external access point. Version 1.5.12 can show a reboot reminder; Android may require renewed consent and a retry. Boot alone does not start recording. WhatsApp still needs Internet.
 - Local recording files remain on the phone. Optional call names default off, use a single eligible live notification label and fall back to a generic title; future recording/export names can contain that label. Older files are unchanged.
 - Each installer chooses their own Drive account/folder or private Telegram bot. Connection alone does not upload; explicit backup enablement includes completed existing and future recordings. Three actual owner-selected-folder Drive uploads were verified in1.5.2. Default-folder/new-named uploads and real personal Telegram provider/device uploads remain separate acceptance. Local implementation and synthetic tests do not establish provider acceptance.
 

@@ -1,21 +1,21 @@
 {
   "status": "ready",
-  "version": "1.5.4",
-  "url": "https://github.com/didi6135/WhatsAppCallRecorder/releases/download/v1.5.4/wa-reco-1.5.4.apk",
-  "filename": "wa-reco-1.5.4.apk",
-  "sizeBytes": 32885737,
-  "sha256": "c5db0060af960dad1b55a2e068e2e943de76833d9bc75a089c4a70ac82571fac",
+  "version": "1.5.12",
+  "url": "https://github.com/didi6135/wa-reco/releases/download/v1.5.12/wa-reco.apk",
+  "filename": "wa-reco.apk",
+  "sizeBytes": 32933589,
+  "sha256": "ec8cd1847762c879a46b7ae4fbaea1da9c154dff91adc2c4fa35cbf8c7c63f24",
   "companion": {
-    "url": "https://github.com/didi6135/WhatsAppCallRecorder/releases/download/v1.5.4/wa-reco-1.5.4-source-and-notices.zip",
-    "filename": "wa-reco-1.5.4-source-and-notices.zip",
-    "sizeBytes": 23142095,
-    "sha256": "8bdebbc1555f4ffbb11d96fd98c08577375bb81b769dec040d753a6bfe878b1f"
+    "url": "https://github.com/didi6135/wa-reco/releases/download/v1.5.12/source-and-notices.zip",
+    "filename": "source-and-notices.zip",
+    "sizeBytes": 23506984,
+    "sha256": "ff117f5b56ddd1f107b706323841237a7a44bdb6f4c89b5424c925d3f55c0186"
   },
   "applicationSource": {
-    "url": "https://github.com/didi6135/WhatsAppCallRecorder/releases/download/v1.5.4/wa-reco-1.5.4-application-source.zip",
-    "filename": "wa-reco-1.5.4-application-source.zip",
-    "sizeBytes": 1022527,
-    "sha256": "e78468280ea49572a7e0be443989c7cbf0aa0c4994617751d30705787ed635c8"
+    "url": "https://github.com/didi6135/wa-reco/releases/download/v1.5.12/application-source.zip",
+    "filename": "application-source.zip",
+    "sizeBytes": 1336435,
+    "sha256": "410f739a64e53dda8d04c045e00882fd5e8546ba85fb0fde26f53bcb851c94bc"
   },
-  "sourceUrl": "https://github.com/didi6135/WhatsAppCallRecorder/tree/d1c9118494edef482ffa3d725fde5f6a7ec5e0f7"
+  "sourceUrl": "https://github.com/didi6135/wa-reco/tree/e45a37b9b2408da3765bee13e799c295239d0ee4"
 }

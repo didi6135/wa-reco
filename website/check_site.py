@@ -11,33 +11,15 @@ from urllib.parse import urljoin, urlsplit
 from playwright.sync_api import sync_playwright
 
 
-RELEASE_ROOT = "https://github.com/didi6135/WhatsAppCallRecorder/releases/download/v1.5.4/"
-EXPECTED = {
-    "version": "1.5.4",
-    "filename": "wa-reco-1.5.4.apk",
-    "url": RELEASE_ROOT + "wa-reco-1.5.4.apk",
-    "sizeBytes": 32885737,
-    "sha256": "c5db0060af960dad1b55a2e068e2e943de76833d9bc75a089c4a70ac82571fac",
-    "companion": {
-        "filename": "wa-reco-1.5.4-source-and-notices.zip",
-        "url": RELEASE_ROOT + "wa-reco-1.5.4-source-and-notices.zip",
-        "sizeBytes": 23142095,
-        "sha256": "8bdebbc1555f4ffbb11d96fd98c08577375bb81b769dec040d753a6bfe878b1f",
-    },
-    "applicationSource": {
-        "filename": "wa-reco-1.5.4-application-source.zip",
-        "url": RELEASE_ROOT + "wa-reco-1.5.4-application-source.zip",
-        "sizeBytes": 1022527,
-        "sha256": "e78468280ea49572a7e0be443989c7cbf0aa0c4994617751d30705787ed635c8",
-    },
-    "sourceUrl": "https://github.com/didi6135/WhatsAppCallRecorder/tree/d1c9118494edef482ffa3d725fde5f6a7ec5e0f7",
-}
+RELEASE_ROOT = 'https://github.com/didi6135/wa-reco/releases/download/v1.5.12/'
+EXPECTED = {'version': '1.5.12', 'url': 'https://github.com/didi6135/wa-reco/releases/download/v1.5.12/wa-reco.apk', 'filename': 'wa-reco.apk', 'sizeBytes': 32933589, 'sha256': 'ec8cd1847762c879a46b7ae4fbaea1da9c154dff91adc2c4fa35cbf8c7c63f24', 'companion': {'url': 'https://github.com/didi6135/wa-reco/releases/download/v1.5.12/source-and-notices.zip', 'filename': 'source-and-notices.zip', 'sizeBytes': 23506984, 'sha256': 'ff117f5b56ddd1f107b706323841237a7a44bdb6f4c89b5424c925d3f55c0186'}, 'applicationSource': {'url': 'https://github.com/didi6135/wa-reco/releases/download/v1.5.12/application-source.zip', 'filename': 'application-source.zip', 'sizeBytes': 1336435, 'sha256': '410f739a64e53dda8d04c045e00882fd5e8546ba85fb0fde26f53bcb851c94bc'}, 'sourceUrl': 'https://github.com/didi6135/wa-reco/tree/e45a37b9b2408da3765bee13e799c295239d0ee4'}
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", default="http://127.0.0.1:8789/")
     parser.add_argument("--dist", default=str(Path(__file__).resolve().parent / "dist"))
+    parser.add_argument("--browser-channel", help="Use an installed browser, such as chrome or msedge")
     parser.add_argument("--output", default=str(Path(__file__).resolve().parent.parent / "artifacts" / "website"))
     args = parser.parse_args()
     output = Path(args.output)
@@ -97,7 +79,7 @@ def main():
         return {"title": page.title(), "description": page.locator('meta[name="description"]').get_attribute("content"), "main": page.locator("h1").inner_text()}
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+        browser = playwright.chromium.launch(headless=True, channel=args.browser_channel)
         context = browser.new_context(viewport={"width": 390, "height": 844}, reduced_motion="reduce")
         page = context.new_page()
         page.on("pageerror", lambda error: page_errors.append({"phase": phase[0], "error": str(error)}))
@@ -268,7 +250,7 @@ def main():
                 ("companion invalid checksum", {**valid, "companion": {**valid["companion"], "sha256": "abc"}}),
                 ("companion plaintext", {**valid, "companion": {**valid["companion"], "url": "http://example.test/source.zip"}}),
                 ("companion wrong extension", {**valid, "companion": {**valid["companion"], "url": "https://example.test/source.html"}}),
-                ("source mutable branch", {**valid, "sourceUrl": "https://github.com/didi6135/WhatsAppCallRecorder/tree/main"}),
+                ("source mutable branch", {**valid, "sourceUrl": "https://github.com/didi6135/wa-reco/tree/main"}),
                 ("source unrelated repo", {**valid, "sourceUrl": "https://github.com/another/repo/tree/" + "c" * 40}),
                 ("application source invalid checksum", {**valid, "applicationSource": {**valid["applicationSource"], "sha256": "abc"}}),
                 ("application source plaintext", {**valid, "applicationSource": {**valid["applicationSource"], "url": "http://example.test/app.zip"}}),
